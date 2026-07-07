@@ -9,6 +9,8 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    "allowJs": true,
+    "checkJs": false,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "noUnusedLocals": false,
