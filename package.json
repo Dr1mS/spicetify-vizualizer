@@ -1,0 +1,21 @@
+{
+  "name": "viz",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Visualizer audio temps réel — modes algorithmiques exotiques pilotés par un bus de features (WebGL2, Vite, TS)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^6.0.5"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.3",
+    "twgl.js": "^5.5.4"
+  }
+}
