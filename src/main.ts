@@ -1,68 +1,86 @@
-// main.ts — bootstrap. Étapes 0-2 : caps + bus audio + beat tracker.
-// (Le cœur de rendu / modes arrivent aux étapes suivantes.)
+// main.ts — bootstrap. Étapes 0-3 : bus audio + beat tracker + cœur de rendu.
+// (Mod matrix + modes arrivent aux étapes 4-5 ; la démo procédurale valide le
+//  chemin de rendu complet en attendant.)
 
-import { AudioBus } from "./audio/bus";
-import { F } from "./audio/constants";
+import { AudioBus, type BusFrame } from "./audio/bus";
+import { createGL } from "./core/gl";
+import { probeCaps, type Caps } from "./core/caps";
+import { makeProgram, drawFullscreen, bindTarget } from "./core/fullscreen";
+import { createTarget, type Target } from "./core/pingpong";
+import { FeatureTexture } from "./core/featureTexture";
+import { RenderLoop, type Viewport } from "./core/loop";
+import { makeLUT } from "./post/lut";
+import demoFrag from "./shaders/demo.frag?raw";
+import toneFrag from "./post/tonemap.frag?raw";
 
 const canvas = document.getElementById("c") as HTMLCanvasElement;
-const gl = canvas.getContext("webgl2", { antialias: false, alpha: false });
-
-(globalThis as unknown as { __viz: unknown }).__viz = {
-  crossOriginIsolated: typeof crossOriginIsolated !== "undefined" && crossOriginIsolated,
-  hasSAB: typeof SharedArrayBuffer !== "undefined",
-  webgl2: !!gl,
-  ext: gl
-    ? {
-        colorBufferFloat: !!gl.getExtension("EXT_color_buffer_float"),
-        colorBufferHalfFloat: !!gl.getExtension("EXT_color_buffer_half_float"),
-        floatLinear: !!gl.getExtension("OES_texture_float_linear"),
-        floatBlend: !!gl.getExtension("EXT_float_blend"),
-      }
-    : null,
-};
-
 let bus: AudioBus | null = null;
 
-async function startAudio() {
+// Trame audio neutre tant que le bus n'est pas prêt.
+const ZERO: BusFrame = {
+  feat: new Float32Array(64), bpm: 120, beatPhase: 0, nextBeat: 0, lockConf: 0,
+  onsetFired: false, kickFired: false, snareFired: false, hatsFired: false,
+};
+
+async function start() {
+  document.getElementById("boot")!.classList.add("hidden");
+
+  // --- audio ---------------------------------------------------------------
   const ctx = new AudioContext();
   await ctx.resume();
   bus = new AudioBus();
-
   const params = new URLSearchParams(location.search);
   let source: AudioNode;
   if (params.has("osc")) {
-    // Mode test : oscillateur (permet de vérifier le pipeline sans micro).
     const o = ctx.createOscillator();
-    o.type = "sawtooth";
-    o.frequency.value = Number(params.get("osc")) || 220;
-    o.start();
+    o.type = "sawtooth"; o.frequency.value = Number(params.get("osc")) || 220; o.start();
     source = o;
   } else {
     source = await AudioBus.micSource(ctx);
   }
   await bus.start(source);
   (globalThis as unknown as { __audiobus: unknown }).__audiobus = bus;
-  console.info("[viz] bus audio démarré (isolated =", bus.isolated, ")");
 
-  let n = 0;
-  const loop = () => {
-    requestAnimationFrame(loop);
-    if (!bus) return;
-    const fr = bus.read();
-    if (n++ % 20 === 0) {
-      let melSum = 0;
-      for (let i = 0; i < 32; i++) melSum += fr.feat[F.MEL0 + i];
-      (globalThis as unknown as { __bus: unknown }).__bus = {
-        rms: fr.feat[F.RMS], peak: fr.feat[F.PEAK], melSum,
-        onset: fr.feat[F.ONSET_STR], flux: fr.feat[F.FLUX], centroid: fr.feat[F.CENTROID],
-        bpm: fr.bpm, beatPhase: fr.beatPhase, lockConf: fr.lockConf,
-      };
-    }
+  // --- rendu ---------------------------------------------------------------
+  const gl = createGL(canvas);
+  const caps: Caps = probeCaps(gl);
+  console.info("[viz] caps", caps);
+  const lut = makeLUT(gl, "ember");
+  const demo = makeProgram(gl, demoFrag, { common: true });
+  const tone = makeProgram(gl, toneFrag);
+  const feat = new FeatureTexture(gl);
+
+  let scene: Target = createTarget(gl, 8, 8, caps.simFormat);
+  const loop = new RenderLoop(canvas, 0.75);
+  loop.onResize((vp: Viewport) => {
+    gl.deleteTexture(scene.tex); gl.deleteFramebuffer(scene.fbo);
+    scene = createTarget(gl, vp.simW, vp.simH, caps.simFormat);
+  });
+
+  const frame = (_dt: number, time: number, vp: Viewport) => {
+    const fr = bus && bus.ready ? bus.read() : ZERO;
+    feat.update(fr);
+    // passe 1 : densité procédurale -> buffer float (résolution de sim)
+    bindTarget(gl, scene.fbo, vp.simW, vp.simH);
+    drawFullscreen(gl, demo, { u_time: time, ...feat.uniforms(fr) });
+    // passe 2 : tonemap -> écran (résolution d'affichage)
+    bindTarget(gl, null, vp.dispW, vp.dispH);
+    drawFullscreen(gl, tone, { u_src: scene.tex, u_lut: lut, u_exposure: 1.6, u_hueShift: 0 });
   };
-  loop();
+  loop.start(frame);
+
+  (globalThis as unknown as { __render: unknown }).__render = {
+    caps, glError: () => gl.getError(),
+    renderOnce: (t: number) => frame(0.016, t ?? 0, loop.vp),
+  };
+  console.info("[viz] rendu démarré");
 }
 
+(globalThis as unknown as { __viz: unknown }).__viz = {
+  crossOriginIsolated: typeof crossOriginIsolated !== "undefined" && crossOriginIsolated,
+  hasSAB: typeof SharedArrayBuffer !== "undefined",
+};
+
 document.getElementById("start")!.addEventListener("click", () => {
-  document.getElementById("boot")!.classList.add("hidden");
-  startAudio().catch((e) => { console.error("[viz] audio erreur:", e); });
+  start().catch((e) => { console.error("[viz] erreur:", e); });
 });
