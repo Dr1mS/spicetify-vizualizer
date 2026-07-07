@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VIZ — banc d'essai de modes audio-réactifs</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #05060a; overflow: hidden; }
+      #c { display: block; width: 100vw; height: 100vh; }
+      #boot {
+        position: fixed; inset: 0; display: grid; place-items: center;
+        font: 14px/1.5 system-ui, sans-serif; color: #cdd3f0; z-index: 10;
+      }
+      #boot button {
+        padding: 14px 28px; font-size: 16px; border: 0; border-radius: 12px; cursor: pointer;
+        color: #fff; background: linear-gradient(90deg, #6c7bff, #ff4d9d);
+      }
+      #boot.hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="boot"><button id="start">▶ Démarrer (micro)</button></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

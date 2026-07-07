@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "viz",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8090"],
-      "port": 8090
+      "name": "viz-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
     }
   ]
 }
