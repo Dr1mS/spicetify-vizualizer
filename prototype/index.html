@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIZ — Music Visualizer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="gl"></canvas>
+  <canvas id="gl2"></canvas>
+  <canvas id="gl3"></canvas>
+  <canvas id="stage"></canvas>
+  <canvas id="spectro"></canvas>
+  <canvas id="analyzer"></canvas>
+
+  <div id="overlay">
+    <div id="panel">
+      <h1>VIZ</h1>
+      <p class="sub">Visualiseur audio réactif — capture le son de ton système.</p>
+
+      <label for="device">Source audio</label>
+      <select id="device"></select>
+
+      <button id="start">▶ Démarrer</button>
+
+      <p class="hint">
+        Astuce PipeWire : choisis une entrée <b>« Monitor of… »</b> pour capter
+        le son qui sort de tes enceintes (Spotify, YouTube, etc.).
+      </p>
+      <p id="err" class="err"></p>
+    </div>
+  </div>
+
+  <div id="panelCfg" class="hidden"></div>
+
+  <div id="hud" class="hidden">
+    <span id="fps">-- fps</span>
+    <span class="dot">•</span>
+    <span id="srcName">—</span>
+    <span class="dot">•</span>
+    <span id="sceneName">—</span>
+    <span class="dot">•</span>
+    <span id="level">niv 0%</span>
+    <span class="dot">•</span>
+    <span class="key">[1-4] scène</span>
+    <span class="key">[Espace] pause</span>
+    <span class="key">[F] plein écran</span>
+    <span class="key">[A] analyseur</span>
+    <span class="key">[S] spectrogramme</span>
+    <span class="key">[R] reconnecter</span>
+    <span class="key">[C] réglages</span>
+    <span class="key">[H] masquer</span>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

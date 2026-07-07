@@ -1,0 +1,11 @@
+{
+  "name": "viz",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Music visualizer — analyse musicale (pilier 1) + rendu réactif",
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "test": "node test/features.test.mjs"
+  }
+}
