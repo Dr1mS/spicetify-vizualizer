@@ -4,22 +4,28 @@
 // Décision d'archi (adresse R1/R3 du verify) : on DÉCOUPLE
 //   - TEMPO : autocorrélation de l'enveloppe d'onset, ré-estimée périodiquement,
 //     avec sélection d'octave explicite + hystérésis (source UNIQUE du bpm).
-//   - PHASE : PLL qui corrige la phase UNIQUEMENT sur les onsets proches d'un
-//     beat (rejet des contretemps, F3), correction douce plafonnée pondérée par
-//     la force (F5). Le bpm ne vient JAMAIS de la phase.
+//   - PHASE : ACCUMULATEUR CIRCULAIRE pondéré par la force (moyenne vectorielle à
+//     décroissance). Chaque onset ajoute un vecteur à l'angle = phase courante ; la
+//     moyenne φ̄ = où tombent les onsets dans notre repère → on corrige pour l'amener
+//     à 0 (beat = phase 0). Robuste aux offbeats : les hats faibles à l'antiphase se
+//     SOUSTRAIENT sans arracher la phase (l'ancien snap-sur-chaque-onset battait au
+//     rythme des onsets, pas du beat). Le bpm ne vient JAMAIS de la phase.
 //
 // Fixes intégrés :
 //   F2  clamp bpm 70..180 à CHAQUE mise à jour (jamais dans une branche onset).
-//   F3  correction de phase seulement si |err| < NEAR (rejette offbeats).
 //   F4  predictedNextBeat non-décroissant (latch dans query()).
-//   F5  correction douce plafonnée : phase += clamp(Kp*err*strength, ±MAXCORR).
-//   F6  lock-confidence = 1 - std(|err| récents)/tol  (PAS la moyenne, qui masque le jitter).
+//   F6  lock-confidence = R = |V|/W = concentration de l'accumulateur (1 = onsets
+//       serrés sur le beat, 0 = diffus). Verrou (Schmitt) que si R haut ET aligné.
 
 const BPM_MIN = 70;
 const BPM_MAX = 180;
-const NEAR = 0.14; // fenêtre de correction (fraction de beat)
-const KP = 0.4; // gain proportionnel de phase (fort -> verrou serré malgré un tempo bruité)
-const MAXCORR = 0.12; // correction max par onset (fraction de beat)
+const DECAY = 0.88; // mémoire de l'accumulateur de phase (~8 onsets)
+const GAIN_ACQ = 0.6; // gain de correction de phase en ACQUISITION (converge vite)
+const GAIN_LOCK = 0.4; // gain de correction fine une fois verrouillé (suivi serré, stable)
+const MIN_EV = 4.5; // preuve minimale (wsum) avant d'autoriser le verrou (R=1 dès 1 onset)
+const R_LOCK = 0.5; // seuil Schmitt haut (acquiert le verrou)
+const R_UNLOCK = 0.25; // seuil Schmitt bas (perd le verrou)
+const TEMPO_LERP = 0.3; // vitesse de convergence du bpm (assez rapide -> peu de lag de phase)
 const BIN = 0.005; // résolution de l'enveloppe d'onset (s) — fin pour ne pas splitter le lag fondamental
 const WINDOW = 4.0; // historique pour l'autocorrélation (s)
 const EST_PERIOD = 0.5; // ré-estimation du tempo (s)
@@ -30,7 +36,7 @@ export class BeatTracker {
     this.phase = 0; // 0..1
     this.lastT = 0;
     this.onsets = []; // {t, s} récents (≤ WINDOW)
-    this.errHist = []; // |err| des onsets acceptés (lock confidence)
+    this.vx = 0; this.vy = 0; this.wsum = 0; // accumulateur circulaire pondéré (phase)
     this.lastEst = -1e9;
     this.lockConf = 0;
     this.locked = false; // état à HYSTÉRÉSIS (Schmitt) : évite le flapping acquisition<->suivi
@@ -51,37 +57,35 @@ export class BeatTracker {
     const cut = t - WINDOW;
     while (this.onsets.length && this.onsets[0].t < cut) this.onsets.shift();
 
-    // erreur de phase (pré-correction) vers le beat le plus proche
-    const err = this.phase < 0.5 ? -this.phase : 1 - this.phase; // ∈ [-0.5, 0.5]
-    const absErr = Math.abs(err);
-    if (this.locked) {
-      // SUIVI : rejet des contretemps (F3) + correction douce plafonnée (F5).
-      if (absErr < NEAR) {
-        this.phase = frac(this.phase + clamp(KP * err * strength, -MAXCORR, MAXCORR));
-        this._pushErr(absErr);
-      }
-      // offbeats : ignorés (ne corrompent ni la phase ni le lock)
-    } else {
-      // ACQUISITION : l'onset DÉFINIT un beat -> on snappe la phase dessus.
-      // (Résout le chicken-and-egg : sans ça, un tempo initial faux empêche le verrou.)
-      this.phase = frac(this.phase + err);
-      this._pushErr(absErr);
-    }
-    if (t - this.lastEst > EST_PERIOD) this._estimateTempo(t);
-  }
+    // ACCUMULATEUR CIRCULAIRE pondéré par la force (mémoire à décroissance) : ajoute
+    // un vecteur à l'angle = phase courante. R = |V|/W = concentration = lock-confidence.
+    const ang = 2 * Math.PI * this.phase;
+    this.vx = this.vx * DECAY + strength * Math.cos(ang);
+    this.vy = this.vy * DECAY + strength * Math.sin(ang);
+    this.wsum = this.wsum * DECAY + strength;
+    const R = this.wsum > 1e-6 ? Math.hypot(this.vx, this.vy) / this.wsum : 0;
+    this.lockConf = R;
+    const phiBar = Math.atan2(this.vy, this.vx) / (2 * Math.PI); // ∈ (-0.5,0.5] = décalage résiduel
+    // Schmitt : on n'ACQUIERT le verrou que quand les onsets sont concentrés (R haut)
+    // ET alignés sur la phase 0 (|φ̄| petit) ET avec assez de preuve (wsum ≥ MIN_EV —
+    // sinon R=1 dès le 1er onset verrouillerait à un tempo initial faux). R mesure la
+    // consistance, pas l'alignement : d'où la condition sur |φ̄|.
+    if (!this.locked && R > R_LOCK && Math.abs(phiBar) < 0.06 && this.wsum > MIN_EV) this.locked = true;
+    else if (this.locked && R < R_UNLOCK) this.locked = false;
 
-  _pushErr(e) {
-    this.errHist.push(e);
-    if (this.errHist.length > 16) this.errHist.shift();
-    if (this.errHist.length >= 8) {
-      const m = this.errHist.reduce((a, b) => a + b, 0) / this.errHist.length;
-      let v = 0; for (const x of this.errHist) v += (x - m) * (x - m);
-      this.lockConf = clamp(1 - Math.sqrt(v / this.errHist.length) / 0.05, 0, 1); // F6 : std, pas moyenne
-      // Schmitt : on n'ACQUIERT le lock qu'au-dessus de 0.5, on ne le PERD que
-      // sous 0.15 -> pas de bascule vers l'acquisition sur un creux transitoire.
-      if (!this.locked && this.lockConf > 0.5) this.locked = true;
-      else if (this.locked && this.lockConf < 0.15) this.locked = false;
-    }
+    // L'accumulateur possède la phase (un seul mécanisme, pas de duel PLL/accum) :
+    // corrige vers φ̄ = 0. Gain fort en acquisition (converge vite), doux une fois
+    // verrouillé (suivi serré). On TOURNE l'accumulateur du même angle que la
+    // correction : les vecteurs stockés restent dans le repère courant (sinon φ̄ traîne
+    // d'un frame périmé → convergence lente). |V| (donc R) est préservé par la rotation.
+    const gain = this.locked ? GAIN_LOCK : GAIN_ACQ;
+    const delta = gain * phiBar; // phase -= delta
+    this.phase = frac(this.phase - delta);
+    const rot = -2 * Math.PI * delta, c = Math.cos(rot), s = Math.sin(rot);
+    const nx = this.vx * c - this.vy * s, ny = this.vx * s + this.vy * c;
+    this.vx = nx; this.vy = ny;
+
+    if (t - this.lastEst > EST_PERIOD) this._estimateTempo(t);
   }
 
   // Autocorrélation de l'enveloppe d'onset -> bpm.
@@ -148,7 +152,7 @@ export class BeatTracker {
 
     const r = candBpm / this.bpm;
     if ((r > 1.5 || r < 0.67) && best < curScore * 1.5) candBpm = this.bpm; // rejette le saut d'octave
-    this.bpm = clampBpm(this.bpm + 0.15 * (candBpm - this.bpm)); // F2 clamp à chaque MAJ
+    this.bpm = clampBpm(this.bpm + TEMPO_LERP * (candBpm - this.bpm)); // F2 clamp à chaque MAJ
   }
 
   // À l'instant `now`, renvoie l'état extrapolé (réactif : lit, ne planifie pas offline).

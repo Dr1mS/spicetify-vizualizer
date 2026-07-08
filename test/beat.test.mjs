@@ -104,5 +104,33 @@ console.log("\n[5] predictedNextBeat non-décroissant (F4)");
   ok(violations === 0, "nextBeat ne recule jamais (pas de double-flash)");
 }
 
+// --- Test 6 : tempos RAPIDES avec offbeats dès le départ (le bug 240 BPM) -----
+// Kick fort SUR le beat + hat faible OFFBEAT, présents DÈS LE DÉBUT (pas de
+// pré-verrou propre). L'ancien tracker : (a) tempo pêchait un sous-harmonique faux
+// (240→158), (b) la phase s'ancrait sur les hats offbeat (kicks à ~0.48). On exige :
+// tempo borné + STABLE, et phase verrouillée sur les KICKS (std bas).
+console.log("\n[6] Tempos rapides + offbeats dès le départ (bug 240 BPM)");
+{
+  for (const trueBpm of [240, 200, 175, 128]) {
+    const bt = new BeatTracker(120);
+    const beat = 60 / trueBpm;
+    const seq = [];
+    for (let t = 0; t < 14; t += beat) { seq.push({ t, s: 1.0, k: true }); seq.push({ t: t + beat / 2, s: 0.35, k: false }); }
+    seq.sort((a, b) => a.t - b.t);
+    const bpmS = [], errK = [];
+    for (const o of seq) {
+      const q = bt.query(o.t);
+      if (o.t > 7 && o.k) errK.push(Math.min(q.beatPhase, 1 - q.beatPhase));
+      if (o.t > 10.5) bpmS.push(q.bpm); // dérive mesurée une fois ÉTABLI (hors rampe d'acquisition)
+      bt.addOnset(o.t, o.s);
+    }
+    const drift = Math.max(...bpmS) - Math.min(...bpmS);
+    const sK = std(errK);
+    console.log(`    ${trueBpm} -> bpm ${bt.bpm.toFixed(1)} (dérive ${drift.toFixed(1)}) | std phase@kick ${sK.toFixed(3)}`);
+    ok(bt.bpm >= 70 && bt.bpm <= 180 && drift < 6, `${trueBpm}: tempo borné et stable`);
+    ok(sK < 0.06, `${trueBpm}: phase verrouillée sur les KICKS (pas les offbeats)`);
+  }
+}
+
 console.log(`\n${passed} passés, ${failed} échoués\n`);
 process.exit(failed ? 1 : 0);
