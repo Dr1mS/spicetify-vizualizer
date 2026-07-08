@@ -1,0 +1,22 @@
+[
+  { "source": "beatPulse", "dest": "global.beatFlash", "amount": 0.7, "curve": "lin", "smoothing": 0.03 },
+  { "source": "onset", "dest": "fhn.params.injAmp", "amount": 1.4, "curve": "pow", "k": 1.5, "smoothing": 0 },
+  { "source": "flux", "dest": "fhn.params.epsilon", "amount": 0.06, "curve": "lin", "smoothing": 0.15 },
+  { "source": "bass", "dest": "fhn.params.Du", "amount": 0.8, "curve": "lin", "smoothing": 0.1 },
+  { "source": "centroid", "dest": "fhn.params.b", "amount": 0.6, "curve": "lin", "smoothing": 0.3 },
+  { "source": "keyHue", "dest": "global.baseHue", "amount": 1.0, "curve": "lin", "smoothing": 0.4 },
+  { "source": "rms", "dest": "global.brightness", "amount": 1.2, "curve": "lin", "smoothing": 0.1 },
+
+  { "source": "bass", "dest": "dejong.params.a", "amount": 1.5, "curve": "lin", "smoothing": 0.05 },
+  { "source": "lowmid", "dest": "dejong.params.b", "amount": 1.5, "curve": "lin", "smoothing": 0.05 },
+  { "source": "mid", "dest": "dejong.params.c", "amount": 1.2, "curve": "lin", "smoothing": 0.05 },
+  { "source": "treble", "dest": "dejong.params.d", "amount": 1.2, "curve": "lin", "smoothing": 0.05 },
+  { "source": "onset", "dest": "dejong.params.warp", "amount": 0.5, "curve": "pow", "k": 2, "smoothing": 0 },
+  { "source": "rms", "dest": "global.exposure", "amount": 2.0, "curve": "lin", "smoothing": 0.1 },
+  { "source": "centroid", "dest": "global.baseHue", "amount": 1.0, "curve": "lin", "smoothing": 0.2 },
+
+  { "source": "bass", "dest": "spacecol.params.stepLen", "amount": 0.01, "curve": "lin", "smoothing": 0.1 },
+  { "source": "energy", "dest": "spacecol.params.spawnCount", "amount": 20, "curve": "lin", "smoothing": 0.2 },
+  { "source": "rms", "dest": "spacecol.params.decay", "amount": 0.03, "curve": "lin", "smoothing": 0.2 },
+  { "source": "peak", "dest": "spacecol.params.bright", "amount": 1.5, "curve": "lin", "smoothing": 0.05 }
+]

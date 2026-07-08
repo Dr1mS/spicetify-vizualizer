@@ -7,6 +7,7 @@ uniform sampler2D u_src; // buffer float (densité / couleur)
 uniform sampler2D u_lut; // LUT RGBA8 sombre->glow (LINEAR)
 uniform float u_exposure;
 uniform float u_hueShift; // décale la teinte de la LUT
+uniform float u_beatFlash; // gain de sortie pulsé sur le beat
 out vec4 o;
 
 void main() {
@@ -18,5 +19,6 @@ void main() {
   // si le buffer porte une teinte (rgb non gris), on la mélange légèrement
   float chroma = length(c - vec3(d)) ;
   vec3 tinted = mix(lut, lut * (0.4 + 0.6 * normalize(c + 1e-4)), clamp(chroma * 2.0, 0.0, 0.5));
-  o = vec4(tinted, 1.0);
+  o = vec4(tinted * (1.0 + u_beatFlash), 1.0); // flash de sortie sur le beat
+
 }

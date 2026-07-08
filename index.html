@@ -5,21 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>VIZ — banc d'essai de modes audio-réactifs</title>
     <style>
-      html, body { margin: 0; height: 100%; background: #05060a; overflow: hidden; }
+      html, body { margin: 0; height: 100%; background: #05060a; overflow: hidden;
+        font-family: system-ui, sans-serif; color: #e8ecff; }
       #c { display: block; width: 100vw; height: 100vh; }
-      #boot {
-        position: fixed; inset: 0; display: grid; place-items: center;
-        font: 14px/1.5 system-ui, sans-serif; color: #cdd3f0; z-index: 10;
-      }
-      #boot button {
-        padding: 14px 28px; font-size: 16px; border: 0; border-radius: 12px; cursor: pointer;
-        color: #fff; background: linear-gradient(90deg, #6c7bff, #ff4d9d);
-      }
-      #boot.hidden { display: none; }
+      #boot { position: fixed; inset: 0; display: grid; place-items: center; z-index: 20; }
+      #boot button { padding: 14px 28px; font-size: 16px; border: 0; border-radius: 12px; cursor: pointer;
+        color: #fff; background: linear-gradient(90deg, #6c7bff, #ff4d9d); }
+      #boot.hidden, #hud.hidden, #mm.hidden { display: none; }
+      #hud { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10;
+        padding: 6px 14px; border-radius: 999px; font-size: 12px; color: #aab; font-variant-numeric: tabular-nums;
+        background: rgba(10,12,22,0.6); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); }
+      #mm { position: fixed; top: 0; right: 0; width: 340px; max-height: 100vh; overflow-y: auto; z-index: 12;
+        padding: 12px 12px 30px; font-size: 12px; background: rgba(10,12,22,0.93);
+        border-left: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+      .mm-head { display: flex; flex-direction: column; margin-bottom: 10px; }
+      .mm-head b { letter-spacing: 2px; } .mm-hint { color: #778; font-size: 10px; }
+      .mm-row { display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
+      .mm-sel { background: #0c0e1a; color: #e8ecff; border: 1px solid rgba(255,255,255,0.12); border-radius: 5px; font-size: 10px; max-width: 78px; }
+      .mm-arrow { color: #667; } .mm-amt { width: 46px; } .mm-sm { width: 34px; accent-color: #6c7bff; }
+      .mm-amt { accent-color: #ff4d9d; } .mm-v { width: 30px; color: #cdd; font-size: 10px; }
+      .mm-del { background: none; border: 0; color: #b56; cursor: pointer; font-size: 14px; }
+      .mm-actions { display: flex; gap: 5px; margin-top: 10px; }
+      .mm-btn { flex: 1; padding: 6px 2px; font-size: 10px; border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 6px; background: rgba(255,255,255,0.05); color: #e8ecff; cursor: pointer; }
     </style>
   </head>
   <body>
     <canvas id="c"></canvas>
+    <div id="hud" class="hidden">—</div>
+    <div id="mm" class="hidden"></div>
     <div id="boot"><button id="start">▶ Démarrer (micro)</button></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
