@@ -63,14 +63,17 @@ async function start() {
     drawFullscreen(gl, tone, { u_src: scene.tex, u_lut: lut, u_exposure: matrix.get("global.exposure"), u_hueShift: matrix.get("global.hueShift"), u_beatFlash: matrix.get("global.beatFlash") });
     // hud
     fpsN++; if (time - fpsT > 0.5) { fps = fpsN / (time - fpsT); fpsT = time; fpsN = 0; }
-    hud.textContent = `${registry.names[registry.index]} · ${Math.round(fps)}fps · ${Math.round(fr.bpm)}bpm · lock ${fr.lockConf.toFixed(2)} · [1-3] mode [M] matrix [L] lut`;
+    hud.textContent = `${registry.index + 1}/${registry.count} ${registry.names[registry.index]} · ${Math.round(fps)}fps · ${Math.round(fr.bpm)}bpm · lock ${fr.lockConf.toFixed(2)} · [1-0/←→] mode [M] matrix [L] lut`;
   };
   loop.start(frame);
 
   const setLut = () => { gl.deleteTexture(lut); lut = makeLUT(gl, LUT_NAMES[lutIdx]); };
   addEventListener("keydown", (e: KeyboardEvent) => {
     const k = e.key.toLowerCase();
-    if (k >= "1" && k <= "3") registry.switch(Number(k) - 1);
+    if (k >= "1" && k <= "9") registry.switch(Number(k) - 1);
+    else if (k === "0") registry.switch(9);
+    else if (k === "arrowright" || k === "]") registry.cycle(1);
+    else if (k === "arrowleft" || k === "[") registry.cycle(-1);
     else if (k === "m") mm.classList.toggle("hidden");
     else if (k === "l") { lutIdx = (lutIdx + 1) % LUT_NAMES.length; setLut(); }
     else if (k === "f") { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }

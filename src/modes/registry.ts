@@ -5,11 +5,31 @@ import type { BusFrame } from "../audio/bus";
 import { FHNMode } from "./fhn";
 import { DeJongMode } from "./dejong";
 import { SpaceColMode } from "./spacecol";
+import { KuramotoMode } from "./kuramoto";
+import { GreenbergMode } from "./greenberg";
+import { SmoothLifeMode } from "./smoothlife";
+import { LeniaMode } from "./lenia";
+import { CliffordMode } from "./clifford";
+import { ThomasMode } from "./thomas";
+import { AizawaMode } from "./aizawa";
+import { ChladniMode } from "./chladni";
+import { KifsMode } from "./kifs";
+import { DiffGrowthMode } from "./diffgrowth";
 
 const FACTORIES: Array<{ id: string; make: () => Mode }> = [
   { id: "fhn", make: () => new FHNMode() },
   { id: "dejong", make: () => new DeJongMode() },
   { id: "spacecol", make: () => new SpaceColMode() },
+  { id: "kuramoto", make: () => new KuramotoMode() },
+  { id: "greenberg", make: () => new GreenbergMode() },
+  { id: "smoothlife", make: () => new SmoothLifeMode() },
+  { id: "lenia", make: () => new LeniaMode() },
+  { id: "clifford", make: () => new CliffordMode() },
+  { id: "thomas", make: () => new ThomasMode() },
+  { id: "aizawa", make: () => new AizawaMode() },
+  { id: "chladni", make: () => new ChladniMode() },
+  { id: "kifs", make: () => new KifsMode() },
+  { id: "diffgrowth", make: () => new DiffGrowthMode() },
 ];
 
 export class ModeRegistry {
@@ -20,16 +40,18 @@ export class ModeRegistry {
     this.current.init(res, vp);
   }
   get names(): string[] { return FACTORIES.map((f) => f.id); }
+  get count(): number { return FACTORIES.length; }
 
   switch(i: number): void {
     if (i === this.index || i < 0 || i >= FACTORIES.length) return;
     const next = FACTORIES[i].make();
-    try { next.init(this.res, this.vp); } // compilation hors-critique
-    catch (e) { console.error("[mode] init échouée:", e); try { next.dispose(); } catch { /* */ } return; }
+    try { next.init(this.res, this.vp); }
+    catch (e) { console.error(`[mode] init "${FACTORIES[i].id}" échouée:`, e); try { next.dispose(); } catch { /* */ } return; }
     const prev = this.current;
     this.current = next; this.index = i;
-    prev.dispose(); // (crossfade possible ici ; swap simple pour l'instant)
+    prev.dispose();
   }
+  cycle(dir: number): void { this.switch((this.index + dir + FACTORIES.length) % FACTORIES.length); }
   resize(vp: Viewport): void { this.vp = vp; this.current.resize(vp); }
   update(fr: BusFrame, dt: number, time: number): void { this.current.update(fr, dt, time); }
   render(target: WebGLFramebuffer | null, w: number, h: number): void { this.current.render(target, w, h); }

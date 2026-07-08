@@ -1,22 +1,525 @@
 [
-  { "source": "beatPulse", "dest": "global.beatFlash", "amount": 0.7, "curve": "lin", "smoothing": 0.03 },
-  { "source": "onset", "dest": "fhn.params.injAmp", "amount": 1.4, "curve": "pow", "k": 1.5, "smoothing": 0 },
-  { "source": "flux", "dest": "fhn.params.epsilon", "amount": 0.06, "curve": "lin", "smoothing": 0.15 },
-  { "source": "bass", "dest": "fhn.params.Du", "amount": 0.8, "curve": "lin", "smoothing": 0.1 },
-  { "source": "centroid", "dest": "fhn.params.b", "amount": 0.6, "curve": "lin", "smoothing": 0.3 },
-  { "source": "keyHue", "dest": "global.baseHue", "amount": 1.0, "curve": "lin", "smoothing": 0.4 },
-  { "source": "rms", "dest": "global.brightness", "amount": 1.2, "curve": "lin", "smoothing": 0.1 },
-
-  { "source": "bass", "dest": "dejong.params.a", "amount": 1.5, "curve": "lin", "smoothing": 0.05 },
-  { "source": "lowmid", "dest": "dejong.params.b", "amount": 1.5, "curve": "lin", "smoothing": 0.05 },
-  { "source": "mid", "dest": "dejong.params.c", "amount": 1.2, "curve": "lin", "smoothing": 0.05 },
-  { "source": "treble", "dest": "dejong.params.d", "amount": 1.2, "curve": "lin", "smoothing": 0.05 },
-  { "source": "onset", "dest": "dejong.params.warp", "amount": 0.5, "curve": "pow", "k": 2, "smoothing": 0 },
-  { "source": "rms", "dest": "global.exposure", "amount": 2.0, "curve": "lin", "smoothing": 0.1 },
-  { "source": "centroid", "dest": "global.baseHue", "amount": 1.0, "curve": "lin", "smoothing": 0.2 },
-
-  { "source": "bass", "dest": "spacecol.params.stepLen", "amount": 0.01, "curve": "lin", "smoothing": 0.1 },
-  { "source": "energy", "dest": "spacecol.params.spawnCount", "amount": 20, "curve": "lin", "smoothing": 0.2 },
-  { "source": "rms", "dest": "spacecol.params.decay", "amount": 0.03, "curve": "lin", "smoothing": 0.2 },
-  { "source": "peak", "dest": "spacecol.params.bright", "amount": 1.5, "curve": "lin", "smoothing": 0.05 }
+  {
+    "source": "beatPulse",
+    "dest": "global.beatFlash",
+    "amount": 0.7,
+    "curve": "lin",
+    "smoothing": 0.03
+  },
+  {
+    "source": "onset",
+    "dest": "fhn.params.injAmp",
+    "amount": 1.4,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "flux",
+    "dest": "fhn.params.epsilon",
+    "amount": 0.06,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "bass",
+    "dest": "fhn.params.Du",
+    "amount": 0.8,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "centroid",
+    "dest": "fhn.params.b",
+    "amount": 0.6,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "keyHue",
+    "dest": "global.baseHue",
+    "amount": 1.0,
+    "curve": "lin",
+    "smoothing": 0.4
+  },
+  {
+    "source": "rms",
+    "dest": "global.brightness",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "bass",
+    "dest": "dejong.params.a",
+    "amount": 1.5,
+    "curve": "lin",
+    "smoothing": 0.05
+  },
+  {
+    "source": "lowmid",
+    "dest": "dejong.params.b",
+    "amount": 1.5,
+    "curve": "lin",
+    "smoothing": 0.05
+  },
+  {
+    "source": "mid",
+    "dest": "dejong.params.c",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.05
+  },
+  {
+    "source": "treble",
+    "dest": "dejong.params.d",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.05
+  },
+  {
+    "source": "onset",
+    "dest": "dejong.params.warp",
+    "amount": 0.5,
+    "curve": "pow",
+    "k": 2,
+    "smoothing": 0
+  },
+  {
+    "source": "rms",
+    "dest": "global.exposure",
+    "amount": 2.0,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "centroid",
+    "dest": "global.baseHue",
+    "amount": 1.0,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "bass",
+    "dest": "spacecol.params.stepLen",
+    "amount": 0.01,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "energy",
+    "dest": "spacecol.params.spawnCount",
+    "amount": 20,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "rms",
+    "dest": "spacecol.params.decay",
+    "amount": 0.03,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "peak",
+    "dest": "spacecol.params.bright",
+    "amount": 1.5,
+    "curve": "lin",
+    "smoothing": 0.05
+  },
+  {
+    "source": "energy",
+    "dest": "kuramoto.params.K",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.25
+  },
+  {
+    "source": "bass",
+    "dest": "kuramoto.params.K",
+    "amount": 0.7,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0.15
+  },
+  {
+    "source": "flux",
+    "dest": "kuramoto.params.omega",
+    "amount": 0.06,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "treble",
+    "dest": "kuramoto.params.melGain",
+    "amount": 2,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "onset",
+    "dest": "kuramoto.params.injAmp",
+    "amount": 1,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "peak",
+    "dest": "kuramoto.params.injRadius",
+    "amount": 0.01,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "energy",
+    "dest": "greenberg.params.rate",
+    "amount": 30,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "treble",
+    "dest": "greenberg.params.injSpectral",
+    "amount": 1.6,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0.1
+  },
+  {
+    "source": "bass",
+    "dest": "greenberg.params.injDensity",
+    "amount": 0.18,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "onset",
+    "dest": "greenberg.params.injRadius",
+    "amount": 0.04,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0.05
+  },
+  {
+    "source": "flux",
+    "dest": "greenberg.params.states",
+    "amount": 3,
+    "curve": "lin",
+    "smoothing": 0.4
+  },
+  {
+    "source": "onset",
+    "dest": "smoothlife.params.injAmp",
+    "amount": 1.2,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "bass",
+    "dest": "smoothlife.params.melAmt",
+    "amount": 0.18,
+    "curve": "lin",
+    "smoothing": 0.12
+  },
+  {
+    "source": "rms",
+    "dest": "smoothlife.params.rate",
+    "amount": 0.12,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "flux",
+    "dest": "smoothlife.params.b1",
+    "amount": 0.06,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "centroid",
+    "dest": "smoothlife.params.ra",
+    "amount": 0.03,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "energy",
+    "dest": "smoothlife.params.d2",
+    "amount": 0.08,
+    "curve": "lin",
+    "smoothing": 0.25
+  },
+  {
+    "source": "bass",
+    "dest": "lenia.params.mu",
+    "amount": 0.06,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "treble",
+    "dest": "lenia.params.sig",
+    "amount": 0.015,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "flux",
+    "dest": "lenia.params.R",
+    "amount": 0.02,
+    "curve": "lin",
+    "smoothing": 0.25
+  },
+  {
+    "source": "energy",
+    "dest": "lenia.params.dt",
+    "amount": 0.08,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "onset",
+    "dest": "lenia.params.injAmp",
+    "amount": 0.6,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "bass",
+    "dest": "clifford.params.a",
+    "amount": -0.5,
+    "curve": "lin",
+    "smoothing": 0.12
+  },
+  {
+    "source": "treble",
+    "dest": "clifford.params.b",
+    "amount": 0.5,
+    "curve": "lin",
+    "smoothing": 0.12
+  },
+  {
+    "source": "lowmid",
+    "dest": "clifford.params.c",
+    "amount": 0.3,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "mid",
+    "dest": "clifford.params.d",
+    "amount": 0.3,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "onsetFired",
+    "dest": "clifford.params.warp",
+    "amount": 0.9,
+    "smoothing": 0.18
+  },
+  {
+    "source": "mid",
+    "dest": "thomas.params.b",
+    "amount": 0.12,
+    "curve": "linear",
+    "smoothing": 0.15
+  },
+  {
+    "source": "bass",
+    "dest": "thomas.params.dt",
+    "amount": 0.06,
+    "curve": "linear",
+    "smoothing": 0.2
+  },
+  {
+    "source": "kick",
+    "dest": "thomas.params.gain",
+    "amount": 0.03,
+    "curve": "linear",
+    "smoothing": 0.05
+  },
+  {
+    "source": "onsetFired",
+    "dest": "thomas.params.scale",
+    "amount": -1.2,
+    "curve": "linear",
+    "smoothing": 0.35
+  },
+  {
+    "source": "beatPhase",
+    "dest": "thomas.params.rotSpeed",
+    "amount": 0.35,
+    "curve": "linear",
+    "smoothing": 0.25
+  },
+  {
+    "source": "treble",
+    "dest": "global.hueShift",
+    "amount": 0.15,
+    "curve": "linear",
+    "smoothing": 0.3
+  },
+  {
+    "source": "bass",
+    "dest": "aizawa.params.a",
+    "amount": 0.2,
+    "curve": "lin",
+    "smoothing": 0.08
+  },
+  {
+    "source": "centroid",
+    "dest": "aizawa.params.c",
+    "amount": 0.3,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "mid",
+    "dest": "aizawa.params.d",
+    "amount": 0.5,
+    "curve": "lin",
+    "smoothing": 0.08
+  },
+  {
+    "source": "treble",
+    "dest": "aizawa.params.e",
+    "amount": 0.15,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "rms",
+    "dest": "aizawa.params.spin",
+    "amount": 0.6,
+    "curve": "lin",
+    "smoothing": 0.12
+  },
+  {
+    "source": "onset",
+    "dest": "aizawa.params.scale",
+    "amount": 0.4,
+    "curve": "pow",
+    "k": 2,
+    "smoothing": 0
+  },
+  {
+    "source": "centroid",
+    "dest": "global.baseHue",
+    "amount": 0.4,
+    "curve": "lin",
+    "smoothing": 0.25
+  },
+  {
+    "source": "bass",
+    "dest": "chladni.params.melGain",
+    "amount": 2.2,
+    "curve": "lin",
+    "smoothing": 0.12
+  },
+  {
+    "source": "flux",
+    "dest": "chladni.params.warp",
+    "amount": 0.4,
+    "curve": "pow",
+    "k": 2,
+    "smoothing": 0.25
+  },
+  {
+    "source": "centroid",
+    "dest": "chladni.params.anim",
+    "amount": 1.5,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "treble",
+    "dest": "chladni.params.power",
+    "amount": 8,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "onset",
+    "dest": "chladni.params.power",
+    "amount": 6,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0.05
+  },
+  {
+    "source": "bass",
+    "dest": "kifs.params.scale",
+    "amount": 0.35,
+    "curve": "pow",
+    "k": 2,
+    "smoothing": 0.25
+  },
+  {
+    "source": "centroid",
+    "dest": "kifs.params.angle",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "treble",
+    "dest": "kifs.params.offset",
+    "amount": 0.5,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "rms",
+    "dest": "kifs.params.glow",
+    "amount": 1.4,
+    "curve": "pow",
+    "k": 2,
+    "smoothing": 0.15
+  },
+  {
+    "source": "energy",
+    "dest": "global.brightness",
+    "amount": 0.5,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "bass",
+    "dest": "diffgrowth.params.repulsion",
+    "amount": 0.5,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "energy",
+    "dest": "diffgrowth.params.melDrive",
+    "amount": 0.8,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "mid",
+    "dest": "diffgrowth.params.maxStep",
+    "amount": 0.008,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "rms",
+    "dest": "diffgrowth.params.decay",
+    "amount": 0.03,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "onsetFired",
+    "dest": "diffgrowth.params.bright",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.08
+  }
 ]
