@@ -101,6 +101,20 @@ Touches **1-0** (modes 1-10) + **← →** pour cycler les 13.
 ### growth (accumulation + décroissance)
 - **diffgrowth** — courbe qui s'auto-subdivise sous répulsion/attraction ; `onset`→croissance. Formes organiques.
 
+## Catalogue (Phase 2b) — 6 modes durs
+
+### continuous
+- **neuralca** — Neural CA à poids FIXES (perception sobel/laplacien + couche fixe) ; `bass`→gain, `onset`→germes. Auto-organisation.
+- **grayscott** — réaction-diffusion (coraux/mitose) ; **F/k** pilotés par `bass`/`treble` (deltas fins — le couple F/k change tout), `onset`→taches.
+- **ising** — verre de spin, Metropolis en damier ; **température** ← `energy`/`rms` (haute=désordre, basse=domaines), `onset`→coup thermique.
+
+### density
+- **buddhabrot** — nébuleuse des trajectoires d'échappement de Mandelbrot (reseed continu des orbites échappées). Spectre→région/teinte.
+- **nbody** — particules sous gravité vers des masses **spawnées sur les onsets** ; traînées par accumulation. Softening anti-NaN.
+
+### growth
+- **dbm** — foudre de Lichtenberg : Laplace (Jacobi) + croissance stochastique ∝ φ^η ; `energy`→η, kick→éclair. Figure fine et brillante.
+
 ## Ajouter un mode
 Un mode implémente `src/modes/Mode.ts` : `init/resize/update/render/reset/dispose`.
 `render(target)` écrit une **densité colorée** dans le buffer `scene` ; `main.ts` la tonemappe.
