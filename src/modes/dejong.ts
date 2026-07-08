@@ -24,7 +24,7 @@ uniform sampler2D uOrbit; uniform int uSize; uniform float uScale;
 void main(){ int id=gl_VertexID; int x=id%uSize; int y=id/uSize;
   vec2 uv=(vec2(float(x),float(y))+0.5)/float(uSize);
   vec2 p = texture(uOrbit,uv).xy;
-  gl_Position = vec4(p/uScale, 0., 1.); gl_PointSize = 1.0; }`;
+  gl_Position = vec4(p/uScale, 0., 1.); gl_PointSize = 1.4; }`;
 
 const POINTS_FS = `#version 300 es
 precision highp float; out vec4 o; uniform vec3 uCol;
@@ -90,7 +90,7 @@ export class DeJongMode implements Mode {
     gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uScale"), this.res.matrix.get("dejong.params.scale") || 2.6);
     const hueBase = this.res.matrix.get("global.baseHue");
     const col = hueRGB(hueBase);
-    gl.uniform3f(gl.getUniformLocation(this.pPoints.program, "uCol"), col[0] * 0.03, col[1] * 0.03, col[2] * 0.03);
+    gl.uniform3f(gl.getUniformLocation(this.pPoints.program, "uCol"), col[0] * 0.22, col[1] * 0.22, col[2] * 0.22);
     gl.bindVertexArray(this.emptyVao);
     gl.drawArrays(gl.POINTS, 0, ORBIT * ORBIT);
     gl.bindVertexArray(null);

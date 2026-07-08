@@ -95,7 +95,7 @@ export class CliffordMode implements Mode {
     gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uScale"), this.res.matrix.get("clifford.params.scale") || 2.0);
     const hueBase = this.res.matrix.get("global.baseHue");
     const col = hueRGB(hueBase);
-    gl.uniform3f(gl.getUniformLocation(this.pPoints.program, "uCol"), col[0] * 0.03, col[1] * 0.03, col[2] * 0.03);
+    gl.uniform3f(gl.getUniformLocation(this.pPoints.program, "uCol"), col[0] * 0.09, col[1] * 0.09, col[2] * 0.09);
     gl.bindVertexArray(this.emptyVao);
     gl.drawArrays(gl.POINTS, 0, ORBIT * ORBIT);
     gl.bindVertexArray(null);

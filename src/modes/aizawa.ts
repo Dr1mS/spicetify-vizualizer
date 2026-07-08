@@ -135,7 +135,7 @@ export class AizawaMode implements Mode {
     const hueBase = this.res.matrix.get("global.baseHue");
     const col = hueRGB(hueBase);
     gl.uniform3f(gl.getUniformLocation(P, "uCol"), col[0], col[1], col[2]);
-    gl.uniform1f(gl.getUniformLocation(P, "uWeight"), 0.03 + this.jolt * 0.02);
+    gl.uniform1f(gl.getUniformLocation(P, "uWeight"), 0.09 + this.jolt * 0.05);
     gl.uniform1f(gl.getUniformLocation(P, "uHueSpan"), 1.0);
     gl.bindVertexArray(this.emptyVao);
     gl.drawArrays(gl.POINTS, 0, ORBIT * ORBIT);

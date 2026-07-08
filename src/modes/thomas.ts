@@ -45,7 +45,7 @@ void main(){
   float cr = cos(uRot), sr = sin(uRot);
   vec2 q = mat2(cr, -sr, sr, cr) * p.xy;
   gl_Position = vec4(q / uScale, 0.0, 1.0);
-  gl_PointSize = 1.0;
+  gl_PointSize = 1.4;
   // teinte de base (baseHue) modulée par la coordonnée z pour la profondeur
   vec3 base = hueRGB(uHue);
   vec3 depth = 0.5 + 0.5 * (p / uScale);
@@ -71,8 +71,8 @@ export class ThomasMode implements Mode {
   init(res: Resources, vp: Viewport): void {
     this.res = res; this.gl = res.gl;
     registerParams(res.matrix.targets, this.id,
-      { dt: 0.15, b: 0.19, scale: 6.0, rotSpeed: 0.15, gain: 0.03 },
-      { dt: [0.05, 0.3], b: [0.10, 0.35], scale: [3.0, 9.0], rotSpeed: [0.0, 1.0], gain: [0.01, 0.08] });
+      { dt: 0.15, b: 0.19, scale: 6.0, rotSpeed: 0.15, gain: 0.20 },
+      { dt: [0.05, 0.3], b: [0.10, 0.35], scale: [3.0, 9.0], rotSpeed: [0.0, 1.0], gain: [0.03, 0.22] });
     this.pSeed = makeProgram(this.gl, SEED, { common: true });
     this.pStep = makeProgram(this.gl, STEP);
     this.pPoints = makeProgram(this.gl, POINTS_FS, { vert: POINTS_VS });
@@ -124,7 +124,7 @@ export class ThomasMode implements Mode {
     gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uScale"), this.res.matrix.get("thomas.params.scale") || 6.0);
     gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uRot"), this.rot);
     gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uHue"), this.res.matrix.get("global.baseHue"));
-    gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uGain"), this.res.matrix.get("thomas.params.gain") || 0.03);
+    gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uGain"), this.res.matrix.get("thomas.params.gain") || 0.20);
     gl.bindVertexArray(this.emptyVao);
     gl.drawArrays(gl.POINTS, 0, ORBIT * ORBIT);
     gl.bindVertexArray(null);
