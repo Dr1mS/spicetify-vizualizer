@@ -80,6 +80,27 @@ Croissance CPU (plus-proche-voisin, kill radius) ; GPU = accumulation **avec dé
 
 ---
 
+## Catalogue (Phase 2) — 10 modes exotiques
+
+Implémentés en parallèle (un shader/mode chacun, réutilisant les 3 scaffolds).
+Touches **1-0** (modes 1-10) + **← →** pour cycler les 13.
+
+### continuous (ping-pong)
+- **kuramoto** — grille d'oscillateurs couplés ; `energy`/`bass`→couplage K, `onset`→perturbation. Vagues de synchro.
+- **greenberg** — automate cyclique excitable (N états) ; `onset`→ensemencement, `flux`→N. Spirales discrètes.
+- **smoothlife** — Life continu (disque/anneau) ; `onset`→taches, `bass`→influence spectrale. Blobs/gliders.
+- **lenia** — CA à noyau annulaire ; `bass`→μ, `treble`→σ, `onset`→germes. Créatures émergentes.
+
+### density (accumulation + tonemap log)
+- **clifford** — attracteur `sin/cos` ; `bass/treble/lowmid/mid`→a,b,c,d, `onsetFired`→warp.
+- **thomas** — attracteur 3D cyclique projeté ; `mid`→b, `beatPhase`→rotation.
+- **aizawa** — attracteur 3D (spirale toroïdale) projeté ; `bass`→a, rotation temporelle.
+- **chladni** — figures cymatiques (lignes nodales) pilotées **littéralement** par `mel[k]`. Rendu direct.
+- **kifs** — raymarching fractal (KIFS "cathédrale") ; folds morphés par `bass`/`centroid`. Rendu direct.
+
+### growth (accumulation + décroissance)
+- **diffgrowth** — courbe qui s'auto-subdivise sous répulsion/attraction ; `onset`→croissance. Formes organiques.
+
 ## Ajouter un mode
 Un mode implémente `src/modes/Mode.ts` : `init/resize/update/render/reset/dispose`.
 `render(target)` écrit une **densité colorée** dans le buffer `scene` ; `main.ts` la tonemappe.
