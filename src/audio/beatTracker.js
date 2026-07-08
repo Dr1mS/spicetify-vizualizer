@@ -101,14 +101,22 @@ export class BeatTracker {
 
     const Lmin = Math.round(60 / BPM_MAX / BIN); // 180 BPM
     const Lmax = Math.round(60 / BPM_MIN / BIN); // 70 BPM
-    const ac = new Float32Array(Lmax + 2);
-    for (let L = Lmin; L <= Lmax + 1 && L < N; L++) {
+    // Étend l'autocorr jusqu'à 3·Lmax pour que le renfort harmonique (2L,3L) soit
+    // DISPONIBLE même pour les lags lents. Sinon biais structurel vers les tempos
+    // rapides faux : une tactus près de Lmax (ex. 120 BPM, lag 100) ne récolte pas
+    // son 2L=200 hors plage, tandis qu'un candidat rapide (160 BPM, lag 75) récolte
+    // son 2L=150 → il gagne à tort (cause du 240→158). Normalisé par le recouvrement
+    // (N-L) : sinon les lags longs (moins de termes) sont sous-évalués (autre biais).
+    const Lext = Math.min(3 * Lmax, N - 1);
+    const ac = new Float32Array(Lext + 1);
+    for (let L = Lmin; L <= Lext; L++) {
       let s = 0; for (let i = L; i < N; i++) s += env[i] * env[i - L];
-      ac[L] = s;
+      ac[L] = s / (N - L);
     }
     const PREF = 125, SIG = 0.55;
     const pref = (bpm) => { const x = Math.log(bpm / PREF); return Math.exp(-(x * x) / (2 * SIG * SIG)); };
-    const harm = (L) => ac[L] + (2 * L <= Lmax ? 0.6 * ac[2 * L] : 0) + (3 * L <= Lmax ? 0.35 * ac[3 * L] : 0);
+    const acAt = (k) => (k <= Lext ? ac[k] : 0);
+    const harm = (L) => ac[L] + 0.6 * acAt(2 * L) + 0.35 * acAt(3 * L);
     // score = harmonique × prior de salience (résout demi/double tempo)
     const sc = new Float32Array(Lmax + 1);
     let bestL = Lmin, best = -1;
