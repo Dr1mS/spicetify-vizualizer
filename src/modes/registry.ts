@@ -15,6 +15,12 @@ import { AizawaMode } from "./aizawa";
 import { ChladniMode } from "./chladni";
 import { KifsMode } from "./kifs";
 import { DiffGrowthMode } from "./diffgrowth";
+import { NeuralCAMode } from "./neuralca";
+import { GrayScottMode } from "./grayscott";
+import { IsingMode } from "./ising";
+import { BuddhabrotMode } from "./buddhabrot";
+import { NBodyMode } from "./nbody";
+import { DbmMode } from "./dbm";
 
 const FACTORIES: Array<{ id: string; make: () => Mode }> = [
   { id: "fhn", make: () => new FHNMode() },
@@ -30,6 +36,12 @@ const FACTORIES: Array<{ id: string; make: () => Mode }> = [
   { id: "chladni", make: () => new ChladniMode() },
   { id: "kifs", make: () => new KifsMode() },
   { id: "diffgrowth", make: () => new DiffGrowthMode() },
+  { id: "grayscott", make: () => new GrayScottMode() },
+  { id: "neuralca", make: () => new NeuralCAMode() },
+  { id: "ising", make: () => new IsingMode() },
+  { id: "buddhabrot", make: () => new BuddhabrotMode() },
+  { id: "nbody", make: () => new NBodyMode() },
+  { id: "dbm", make: () => new DbmMode() },
 ];
 
 export class ModeRegistry {

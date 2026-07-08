@@ -521,5 +521,231 @@
     "amount": 1.2,
     "curve": "lin",
     "smoothing": 0.08
+  },
+  {
+    "source": "bass",
+    "dest": "neuralca.params.pGain",
+    "amount": 0.7,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0.15
+  },
+  {
+    "source": "treble",
+    "dest": "neuralca.params.rate",
+    "amount": 0.6,
+    "curve": "pow",
+    "k": 1.2,
+    "smoothing": 0.2
+  },
+  {
+    "source": "centroid",
+    "dest": "neuralca.params.melAmt",
+    "amount": 0.8,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "onset",
+    "dest": "neuralca.params.injRadius",
+    "amount": 0.004,
+    "curve": "pow",
+    "k": 2,
+    "smoothing": 0
+  },
+  {
+    "source": "bass",
+    "dest": "grayscott.params.F",
+    "amount": 0.015,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "treble",
+    "dest": "grayscott.params.k",
+    "amount": 0.005,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "onset",
+    "dest": "grayscott.params.injAmp",
+    "amount": 0.9,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "energy",
+    "dest": "grayscott.params.rate",
+    "amount": 0.5,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "energy",
+    "dest": "ising.params.temp",
+    "amount": 2,
+    "curve": "lin",
+    "smoothing": 0.15,
+    "k": 1
+  },
+  {
+    "source": "rms",
+    "dest": "ising.params.temp",
+    "amount": 0.8,
+    "curve": "pow",
+    "k": 1.3,
+    "smoothing": 0.1
+  },
+  {
+    "source": "onset",
+    "dest": "ising.params.onsetHeat",
+    "amount": 1.8,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "flux",
+    "dest": "ising.params.kickAmount",
+    "amount": 0.6,
+    "curve": "lin",
+    "smoothing": 0.05
+  },
+  {
+    "source": "centroid",
+    "dest": "ising.params.edge",
+    "amount": 1.4,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "highmid",
+    "dest": "ising.params.kickSpectral",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "energy",
+    "dest": "buddhabrot.params.melWarp",
+    "amount": 0.7,
+    "curve": "lin",
+    "smoothing": 0.25,
+    "k": 1
+  },
+  {
+    "source": "onset",
+    "dest": "buddhabrot.params.gain",
+    "amount": 0.6,
+    "curve": "exp",
+    "smoothing": 0.12,
+    "k": 1
+  },
+  {
+    "source": "centroid",
+    "dest": "buddhabrot.params.hue",
+    "amount": 0.4,
+    "curve": "lin",
+    "smoothing": 0.4,
+    "k": 1
+  },
+  {
+    "source": "flux",
+    "dest": "buddhabrot.params.reseed",
+    "amount": 0.35,
+    "curve": "lin",
+    "smoothing": 0.3,
+    "k": 1
+  },
+  {
+    "source": "beatPhase",
+    "dest": "buddhabrot.params.scale",
+    "amount": 0.25,
+    "curve": "lin",
+    "smoothing": 0.35,
+    "k": 1
+  },
+  {
+    "source": "bass",
+    "dest": "nbody.params.g",
+    "amount": 0.5,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0.15
+  },
+  {
+    "source": "onsetFired",
+    "dest": "nbody.params.massForce",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.25
+  },
+  {
+    "source": "treble",
+    "dest": "nbody.params.speedGain",
+    "amount": 0.4,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0.2
+  },
+  {
+    "source": "onset",
+    "dest": "nbody.params.gain",
+    "amount": 0.08,
+    "curve": "pow",
+    "k": 2,
+    "smoothing": 0.1
+  },
+  {
+    "source": "beatPulse",
+    "dest": "nbody.params.scale",
+    "amount": -0.15,
+    "curve": "lin",
+    "smoothing": 0.05
+  },
+  {
+    "source": "energy",
+    "dest": "nbody.params.decay",
+    "amount": 0.05,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "bass",
+    "dest": "dbm.params.eta",
+    "amount": -1.4,
+    "curve": "lin",
+    "smoothing": 0.4
+  },
+  {
+    "source": "onset",
+    "dest": "dbm.params.rate",
+    "amount": 1.2,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "kick",
+    "dest": "dbm.params.kickBoost",
+    "amount": 1.5,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "treble",
+    "dest": "dbm.params.melAmt",
+    "amount": 0.8,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "energy",
+    "dest": "dbm.params.bright",
+    "amount": 0.12,
+    "curve": "lin",
+    "smoothing": 0.5
   }
 ]
