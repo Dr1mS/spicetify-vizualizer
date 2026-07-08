@@ -132,5 +132,28 @@ console.log("\n[6] Tempos rapides + offbeats dès le départ (bug 240 BPM)");
   }
 }
 
+// --- Test 7 : syncope NON-antiphase (ghost notes à phase ~0.3) ----------------
+// Les contretemps du Test 3 sont à l'antiphase exacte (0.5) → ils s'annulent le long
+// de vx sans tirer φ̄. Un onset syncopé hors-antiphase (ghost note swing, phase ~0.3)
+// injecte une vraie composante vy et POURRAIT tirer la phase. On vérifie que la phase
+// reste ancrée sur les beats forts (l'accumulateur pondéré + décroissance l'absorbe).
+console.log("\n[7] Syncope non-antiphase (ghost notes phase ~0.3)");
+{
+  const bt = new BeatTracker(120);
+  const P = 60 / 128;
+  for (let k = 0; k < 20; k++) bt.addOnset(k * P, 1); // pré-verrou propre
+  const errs = [];
+  for (let k = 20; k < 80; k++) {
+    const t = k * P;
+    const q = bt.query(t);
+    errs.push(Math.min(q.beatPhase, 1 - q.beatPhase));
+    bt.addOnset(t, 1); // beat fort
+    bt.addOnset(t + P * 0.3, 0.6); // ghost note syncopée (hors antiphase)
+  }
+  const s = std(errs);
+  console.log("    std phase au beat AVEC ghost@0.3", s.toFixed(4));
+  ok(s < 0.06, "syncope hors-antiphase ne corrompt pas la phase (std < 0.06)");
+}
+
 console.log(`\n${passed} passés, ${failed} échoués\n`);
 process.exit(failed ? 1 : 0);
