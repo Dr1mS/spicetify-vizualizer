@@ -88,6 +88,10 @@ panel.
 >
 > Running `npm run bridge` by hand while the service is up will fail with
 > `port 8787 déjà pris` — that is the service already doing its job.
+>
+> Do not pass `--eager` to the service: that flag makes the bridge capture
+> continuously, which defeats the whole point of running it as a background
+> service. It exists for debugging a capture problem, from a terminal.
 
 ### Uninstall
 
