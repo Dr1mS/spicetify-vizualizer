@@ -11,6 +11,7 @@ import { registerParams, unregister } from "../modmatrix/targets";
 import { F } from "../audio/constants";
 import type { Mode, Resources } from "./Mode";
 import type { BusFrame } from "../audio/bus";
+import { decayDt, gainDt } from "../core/loop";
 import type { Viewport } from "../core/loop";
 
 const MAX_NODES = 1500;   // cap dur : reset si dépassé
@@ -33,6 +34,7 @@ void main(){ o = texture(uTex, v_uv); }`;
 
 export class DiffGrowthMode implements Mode {
   id = "diffgrowth"; family = "growth" as const;
+  private lastDt = 1 / 60; private lastTime = -1; // décroissance compensée (render() n'a pas dt)
   private gl!: WebGL2RenderingContext; private res!: Resources;
   private accum!: PingPong; private w = 0; private h = 0;
   private pDecay: any; private pSeg: any; private pCopy: any;
@@ -111,7 +113,13 @@ export class DiffGrowthMode implements Mode {
     this.nCount = n + 1;
   }
 
-  update(fr: BusFrame): void {
+  update(fr: BusFrame, dt: number, time: number): void {
+    // Le dt fourni est BORNÉ à 1/20 s par RenderLoop (protection des simulations
+    // après un blocage). Pour la décroissance il faut le temps RÉELLEMENT écoulé,
+    // sinon la compensation ne corrige qu'un tiers du problème quand le rAF est
+    // bridé à ~1,3 Hz (fenêtre non focalisée).
+    const reel = this.lastTime < 0 ? dt : Math.min(1, Math.max(1 / 1000, time - this.lastTime));
+    this.lastTime = time; this.lastDt = reel;
     const m = this.res.matrix;
     const n = this.nCount;
     if (n < 3) { this.lineVerts = 0; return; }
@@ -211,7 +219,7 @@ export class DiffGrowthMode implements Mode {
     const gl = this.gl; const m = this.res.matrix;
     // décroissance : accum.read * decay -> accum.write
     bindTarget(gl, this.accum.write.fbo, this.w, this.h);
-    drawFullscreen(gl, this.pDecay, { uTex: this.accum.read.tex, uDecay: m.get("diffgrowth.params.decay") });
+    drawFullscreen(gl, this.pDecay, { uTex: this.accum.read.tex, uDecay: decayDt(m.get("diffgrowth.params.decay"), this.lastDt) });
     // courbe entière (additif) par-dessus
     if (this.lineVerts > 0) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -219,7 +227,8 @@ export class DiffGrowthMode implements Mode {
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
       gl.useProgram(this.pSeg.program);
       const col = hueRGB(m.get("global.baseHue")); const b = m.get("diffgrowth.params.bright");
-      gl.uniform3f(gl.getUniformLocation(this.pSeg.program, "uCol"), col[0] * b, col[1] * b, col[2] * b);
+      const bd = gainDt(b, this.lastDt); // dépôt compensé (voir gainDt)
+      gl.uniform3f(gl.getUniformLocation(this.pSeg.program, "uCol"), col[0] * bd, col[1] * bd, col[2] * bd);
       gl.bindVertexArray(this.vao);
       gl.drawArrays(gl.LINES, 0, this.lineVerts);
       gl.bindVertexArray(null);

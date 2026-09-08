@@ -21,6 +21,11 @@ import { IsingMode } from "./ising";
 import { BuddhabrotMode } from "./buddhabrot";
 import { NBodyMode } from "./nbody";
 import { DbmMode } from "./dbm";
+import { HocketMode } from "./hocket";
+import { CombMode } from "./comb";
+import { StitchMode } from "./stitch";
+import { AnamneseMode } from "./anamnese";
+import { SymbioseMode } from "./symbiose";
 
 const FACTORIES: Array<{ id: string; make: () => Mode }> = [
   { id: "fhn", make: () => new FHNMode() },
@@ -42,6 +47,12 @@ const FACTORIES: Array<{ id: string; make: () => Mode }> = [
   { id: "buddhabrot", make: () => new BuddhabrotMode() },
   { id: "nbody", make: () => new NBodyMode() },
   { id: "dbm", make: () => new DbmMode() },
+  // --- créations maison (pas des systèmes du catalogue) ---
+  { id: "hocket", make: () => new HocketMode() },
+  { id: "comb", make: () => new CombMode() },
+  { id: "stitch", make: () => new StitchMode() },
+  { id: "anamnese", make: () => new AnamneseMode() },
+  { id: "symbiose", make: () => new SymbioseMode() },
 ];
 
 export class ModeRegistry {

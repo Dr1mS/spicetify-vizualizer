@@ -4,7 +4,7 @@ import type { Targets } from "./types";
 export function buildTargets(): Targets {
   const t: Targets = new Map();
   add(t, "global.brightness", 1, 0, 3);
-  add(t, "global.exposure", 1.6, 0.2, 8);
+  add(t, "global.exposure", 2.0, 0.2, 10); // recalée pour la courbe à épaule longue
   add(t, "global.baseHue", 0.6, 0, 1, true);
   add(t, "global.hueShift", 0, 0, 1, true);
   add(t, "global.beatFlash", 0, 0, 2); // gain de sortie pulsé sur le beat

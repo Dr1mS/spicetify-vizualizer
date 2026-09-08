@@ -7,6 +7,7 @@ import { PingPong } from "../core/pingpong";
 import { registerParams, unregister } from "../modmatrix/targets";
 import type { Mode, Resources } from "./Mode";
 import type { BusFrame } from "../audio/bus";
+import { decayDt, gainDt } from "../core/loop";
 import type { Viewport } from "../core/loop";
 
 const MAX_NODES = 3000;
@@ -29,6 +30,7 @@ void main(){ o = texture(uTex, v_uv); }`;
 
 export class SpaceColMode implements Mode {
   id = "spacecol"; family = "growth" as const;
+  private lastDt = 1 / 60; private lastTime = -1; // décroissance compensée (render() n'a pas dt)
   private gl!: WebGL2RenderingContext; private res!: Resources;
   private accum!: PingPong; private w = 0; private h = 0;
   private pDecay: any; private pSeg: any; private pCopy: any;
@@ -79,7 +81,13 @@ export class SpaceColMode implements Mode {
     if (this.ax.length > 1200) { this.ax.splice(0, this.ax.length - 1200); this.ay.splice(0, this.ay.length - 1200); }
   }
 
-  update(fr: BusFrame): void {
+  update(fr: BusFrame, dt: number, time: number): void {
+    // Le dt fourni est BORNÉ à 1/20 s par RenderLoop (protection des simulations
+    // après un blocage). Pour la décroissance il faut le temps RÉELLEMENT écoulé,
+    // sinon la compensation ne corrige qu'un tiers du problème quand le rAF est
+    // bridé à ~1,3 Hz (fenêtre non focalisée).
+    const reel = this.lastTime < 0 ? dt : Math.min(1, Math.max(1 / 1000, time - this.lastTime));
+    this.lastTime = time; this.lastDt = reel;
     const m = this.res.matrix;
     if (fr.onsetFired) this.spawn(Math.round(m.get("spacecol.params.spawnCount") || 26), m.get("spacecol.params.spawnSpread") || 0.28);
     const infl = m.get("spacecol.params.influenceRadius"), kill = m.get("spacecol.params.killRadius"), step = m.get("spacecol.params.stepLen");
@@ -118,7 +126,7 @@ export class SpaceColMode implements Mode {
     const gl = this.gl; const m = this.res.matrix;
     // décroissance : accum.read * decay -> accum.write
     bindTarget(gl, this.accum.write.fbo, this.w, this.h);
-    drawFullscreen(gl, this.pDecay, { uTex: this.accum.read.tex, uDecay: m.get("spacecol.params.decay") });
+    drawFullscreen(gl, this.pDecay, { uTex: this.accum.read.tex, uDecay: decayDt(m.get("spacecol.params.decay"), this.lastDt) });
     // segments neufs (additif) par-dessus
     if (this.newSeg > 0) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -126,7 +134,8 @@ export class SpaceColMode implements Mode {
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
       gl.useProgram(this.pSeg.program);
       const col = hueRGB(m.get("global.baseHue")); const b = m.get("spacecol.params.bright");
-      gl.uniform3f(gl.getUniformLocation(this.pSeg.program, "uCol"), col[0] * b, col[1] * b, col[2] * b);
+      const bd = gainDt(b, this.lastDt); // dépôt compensé (voir gainDt)
+      gl.uniform3f(gl.getUniformLocation(this.pSeg.program, "uCol"), col[0] * bd, col[1] * bd, col[2] * bd);
       gl.bindVertexArray(this.vao);
       gl.drawArrays(gl.LINES, 0, this.newSeg * 2);
       gl.bindVertexArray(null);

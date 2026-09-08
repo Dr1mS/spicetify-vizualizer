@@ -24,4 +24,6 @@ export interface Mode {
   render(target: WebGLFramebuffer | null, w: number, h: number): void;
   reset(): void;
   dispose(): void;
+  /** État interne lisible (console, pilotage CDP). Optionnel. */
+  debug?(): unknown;
 }

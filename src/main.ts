@@ -60,7 +60,9 @@ async function start() {
     registry.render(scene.fbo, vp.simW, vp.simH);
     // tonemap scene -> écran
     bindTarget(gl, null, vp.dispW, vp.dispH);
-    drawFullscreen(gl, tone, { u_src: scene.tex, u_lut: lut, u_exposure: matrix.get("global.exposure"), u_hueShift: matrix.get("global.hueShift"), u_beatFlash: matrix.get("global.beatFlash") });
+    // neutres : sans elles les uniformes valent 0 et l'alpha tomberait à 0 partout
+    drawFullscreen(gl, tone, { u_pane: [0, 0, vp.dispW, vp.dispH], u_outAlpha: 1, u_feather: 1,
+      u_src: scene.tex, u_lut: lut, u_exposure: matrix.get("global.exposure"), u_hueShift: matrix.get("global.hueShift"), u_beatFlash: matrix.get("global.beatFlash") });
     // hud
     fpsN++; if (time - fpsT > 0.5) { fps = fpsN / (time - fpsT); fpsT = time; fpsN = 0; }
     hud.textContent = `${registry.index + 1}/${registry.count} ${registry.names[registry.index]} · ${Math.round(fps)}fps · ${Math.round(fr.bpm)}bpm · lock ${fr.lockConf.toFixed(2)} · [1-0/←→] mode [M] matrix [L] lut`;

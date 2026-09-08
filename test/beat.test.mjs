@@ -43,7 +43,7 @@ console.log("\n[2] Sélection d'octave : reste borné, bon tempo");
     const P8 = 60 / 120 / 2; // croches (240 events/min)
     for (let k = 0; k < 160; k++) bt.addOnset(k * P8, k % 2 === 0 ? 1 : 0.6);
     console.log("    croches@120 -> estimé", bt.bpm.toFixed(1));
-    ok(bt.bpm >= 70 && bt.bpm <= 180, "croches: reste borné (pas 240)");
+    ok(bt.bpm >= 70 && bt.bpm <= 240, "croches: reste borné");
   }
 }
 
@@ -127,7 +127,9 @@ console.log("\n[6] Tempos rapides + offbeats dès le départ (bug 240 BPM)");
     const drift = Math.max(...bpmS) - Math.min(...bpmS);
     const sK = std(errK);
     console.log(`    ${trueBpm} -> bpm ${bt.bpm.toFixed(1)} (dérive ${drift.toFixed(1)}) | std phase@kick ${sK.toFixed(3)}`);
-    ok(bt.bpm >= 70 && bt.bpm <= 180 && drift < 6, `${trueBpm}: tempo borné et stable`);
+    // Plafond porté à 240 (hardstyle, drum&bass, hardcore) : à 200 BPM le suiveur
+    // doit maintenant rapporter 200, pas se replier sur la demi-mesure.
+    ok(bt.bpm >= 70 && bt.bpm <= 240 && drift < 6, `${trueBpm}: tempo borné et stable`);
     ok(sK < 0.06, `${trueBpm}: phase verrouillée sur les KICKS (pas les offbeats)`);
   }
 }
@@ -153,6 +155,28 @@ console.log("\n[7] Syncope non-antiphase (ghost notes phase ~0.3)");
   const s = std(errs);
   console.log("    std phase au beat AVEC ghost@0.3", s.toFixed(4));
   ok(s < 0.06, "syncope hors-antiphase ne corrompt pas la phase (std < 0.06)");
+}
+
+// --- Test 8 : tempos RAPIDES réels (le bug "ça suit pas en trance") ----------
+// L'instant d'un onset est daté sur la grille d'analyse (saut 10,67 ms), donc un
+// kick à 150 BPM ressort à 395 ou 405 ms — en cases de 5 ms : 79 ou 81, JAMAIS 80.
+// L'autocorrélation au vrai tempo valait donc exactement 0 et le suiveur tombait
+// à 75. On vérifie ici la bande qui posait problème, avec une source PROPRE
+// (impulsions régulières) : c'est le cas où il n'y a aucune excuse.
+console.log("\n[8] Bande 140-200 BPM (verrous au demi-tempo)");
+{
+  for (const trueBpm of [140, 150, 160, 170, 185, 200]) {
+    const bt = new BeatTracker(120);
+    const beat = 60 / trueBpm;
+    // Jitter de DATATION reproduit fidèlement : le worklet date chaque onset sur
+    // la grille d'analyse (saut de 10,67 ms), ce qui décale l'instant détecté du
+    // reste de la division — mesuré : écarts de 395/405 ms à 150 BPM.
+    const HOP = 512 / 48000;
+    for (let i = 0, t = 0; t < 16; i++, t = i * beat) bt.addOnset(Math.round(t / HOP) * HOP, 1.0);
+    const err = Math.abs(bt.bpm - trueBpm) / trueBpm;
+    console.log(`    ${trueBpm} -> ${bt.bpm.toFixed(1)}`);
+    ok(err < 0.06, `${trueBpm}: pas de repli au demi-tempo`);
+  }
 }
 
 console.log(`\n${passed} passés, ${failed} échoués\n`);

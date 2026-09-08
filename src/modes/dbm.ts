@@ -22,6 +22,7 @@ import { PingPong } from "../core/pingpong";
 import { registerParams, unregister, getParam } from "../modmatrix/targets";
 import type { Mode, Resources } from "./Mode";
 import type { BusFrame } from "../audio/bus";
+import { decayDt } from "../core/loop";
 import type { Viewport } from "../core/loop";
 
 // --- germination : amas = disque au centre, φ=0 partout, B=0.
@@ -118,6 +119,7 @@ void main(){ o = vec4(texture(uTex, v_uv).rgb, 1.0); }`;
 
 export class DbmMode implements Mode {
   id = "dbm";
+  private lastDt = 1 / 60; private lastTime = -1; // décroissance compensée (render() n'a pas dt)
   family = "growth" as const;
   private gl!: WebGL2RenderingContext;
   private res!: Resources;
@@ -174,6 +176,12 @@ export class DbmMode implements Mode {
   }
 
   update(fr: BusFrame, dt: number, time: number): void {
+    // Le dt fourni est BORNÉ à 1/20 s par RenderLoop (protection des simulations
+    // après un blocage). Pour la décroissance il faut le temps RÉELLEMENT écoulé,
+    // sinon la compensation ne corrige qu'un tiers du problème quand le rAF est
+    // bridé à ~1,3 Hz (fenêtre non focalisée).
+    const reel = this.lastTime < 0 ? dt : Math.min(1, Math.max(1 / 1000, time - this.lastTime));
+    this.lastTime = time; this.lastDt = reel;
     const gl = this.gl; const m = this.res.matrix;
     this.time = time;
     const bdt = Math.min(Math.max(dt, 0), 0.05); // dt borné
@@ -215,7 +223,7 @@ export class DbmMode implements Mode {
     bindTarget(gl, this.accum.write.fbo, this.w, this.h);
     drawFullscreen(gl, this.pAccum, {
       uAccum: this.accum.read.tex, uState: this.state.read.tex,
-      uDecay: Math.min(Math.max(m.get("dbm.params.decay"), 0.0), 0.999),
+      uDecay: decayDt(Math.min(Math.max(m.get("dbm.params.decay"), 0.0), 0.999), this.lastDt),
       uBright: Math.max(m.get("dbm.params.bright"), 0),
       uHue: huev, uHueRGB: col,
     });

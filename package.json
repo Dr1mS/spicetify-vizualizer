@@ -8,7 +8,11 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "bridge": "node bridge/viz-bridge.mjs",
+    "build:spicetify": "vite build --config vite.spicetify.config.ts",
+    "install:spicetify": "npm run build:spicetify && node spicetify/install.mjs",
+    "test": "for f in test/*.test.mjs; do node \"$f\" || exit 1; done"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

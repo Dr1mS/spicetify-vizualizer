@@ -16,5 +16,5 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": ["src"]
+  "include": ["src", "spicetify/src"]
 }

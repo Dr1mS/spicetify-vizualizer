@@ -747,5 +747,194 @@
     "amount": 0.12,
     "curve": "lin",
     "smoothing": 0.5
+  },
+  {
+    "source": "onset",
+    "dest": "hocket.params.kickAmp",
+    "amount": 0.6,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "bass",
+    "dest": "hocket.params.seedR",
+    "amount": 0.006,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "treble",
+    "dest": "hocket.params.hatsAmp",
+    "amount": 0.5,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "flux",
+    "dest": "hocket.params.seam",
+    "amount": 0.7,
+    "curve": "pow",
+    "k": 1.3,
+    "smoothing": 0.05
+  },
+  {
+    "source": "rms",
+    "dest": "hocket.params.floorLum",
+    "amount": 0.08,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "onset",
+    "dest": "comb.params.hitAmp",
+    "amount": 1.0,
+    "curve": "pow",
+    "k": 1.5,
+    "smoothing": 0
+  },
+  {
+    "source": "lockConf",
+    "dest": "comb.params.tapGain",
+    "amount": 0.25,
+    "curve": "lin",
+    "smoothing": 0.4
+  },
+  {
+    "source": "bass",
+    "dest": "comb.params.zoom",
+    "amount": 0.02,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "treble",
+    "dest": "comb.params.swirl",
+    "amount": 0.12,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "centroid",
+    "dest": "comb.params.specGain",
+    "amount": 0.3,
+    "curve": "lin",
+    "smoothing": 0.25
+  },
+  {
+    "source": "energy",
+    "dest": "stitch.params.stiff",
+    "amount": 22,
+    "curve": "lin",
+    "smoothing": 0.25
+  },
+  {
+    "source": "bass",
+    "dest": "stitch.params.swirl",
+    "amount": 0.08,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "treble",
+    "dest": "stitch.params.spread",
+    "amount": 0.12,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "onset",
+    "dest": "stitch.params.gain",
+    "amount": 0.35,
+    "curve": "pow",
+    "k": 1.4,
+    "smoothing": 0.05
+  },
+  {
+    "source": "flux",
+    "dest": "stitch.params.tense",
+    "amount": 0.4,
+    "curve": "lin",
+    "smoothing": 0.1
+  },
+  {
+    "source": "energy",
+    "dest": "anamnese.params.inject",
+    "amount": 0.5,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "bass",
+    "dest": "anamnese.params.vortex",
+    "amount": 0.8,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "treble",
+    "dest": "anamnese.params.filament",
+    "amount": 5,
+    "curve": "lin",
+    "smoothing": 0.25
+  },
+  {
+    "source": "centroid",
+    "dest": "anamnese.params.swirl",
+    "amount": 0.4,
+    "curve": "lin",
+    "smoothing": 0.3
+  },
+  {
+    "source": "flux",
+    "dest": "anamnese.params.advect",
+    "amount": 0.35,
+    "curve": "pow",
+    "k": 1.3,
+    "smoothing": 0.1
+  },
+  {
+    "source": "energy",
+    "dest": "symbiose.params.fieldRate",
+    "amount": 18,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "bass",
+    "dest": "symbiose.params.ignite",
+    "amount": 0.05,
+    "curve": "lin",
+    "smoothing": 0.15
+  },
+  {
+    "source": "treble",
+    "dest": "symbiose.params.surf",
+    "amount": 1.2,
+    "curve": "lin",
+    "smoothing": 0.2
+  },
+  {
+    "source": "onset",
+    "dest": "symbiose.params.swimGain",
+    "amount": 0.05,
+    "curve": "pow",
+    "k": 1.4,
+    "smoothing": 0.05
+  },
+  {
+    "source": "flux",
+    "dest": "symbiose.params.grow",
+    "amount": 1.2,
+    "curve": "pow",
+    "k": 1.3,
+    "smoothing": 0.1
+  },
+  {
+    "source": "centroid",
+    "dest": "symbiose.params.b",
+    "amount": 0.08,
+    "curve": "lin",
+    "smoothing": 0.3
   }
 ]

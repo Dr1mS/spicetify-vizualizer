@@ -75,7 +75,12 @@ void main(){
     acc += vec2(cos(TAU*tj), sin(TAU*tj));
   }
   float r = length(acc) / 9.0;              // cohérence locale
-  float dens = (0.15 + uBright) * (0.25 + 0.75*r*r);
+  // MESURÉ : (0.15+uBright)*(0.25+0.75r²) bornait la densité à [0,037 ; 0,15],
+  // soit le quart bas de la LUT — 13 niveaux distincts sur 64 à l'écran, d'où
+  // l'impression que « tout se ressemble ». On couvre maintenant la rampe, et le
+  // cube de r creuse l'écart entre zones synchronisées et désynchronisées (c'est
+  // CE contraste qui porte l'information du mode).
+  float dens = (1.0 + uBright) * (0.07 + 2.3*r*r*r);
   vec3 col = hue(uHue + th) * dens;
   o = vec4(col, 1.);
 }`;

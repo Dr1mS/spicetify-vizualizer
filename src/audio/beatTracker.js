@@ -18,7 +18,7 @@
 //       serrés sur le beat, 0 = diffus). Verrou (Schmitt) que si R haut ET aligné.
 
 const BPM_MIN = 70;
-const BPM_MAX = 180;
+const BPM_MAX = 240; // hardstyle, drum&bass, hardcore : 180 ne suffisait pas
 const DECAY = 0.88; // mémoire de l'accumulateur de phase (~8 onsets)
 const GAIN_ACQ = 0.6; // gain de correction de phase en ACQUISITION (converge vite)
 const GAIN_LOCK = 0.4; // gain de correction fine une fois verrouillé (suivi serré, stable)
@@ -29,6 +29,11 @@ const TEMPO_LERP = 0.3; // vitesse de convergence du bpm (assez rapide -> peu de
 const BIN = 0.005; // résolution de l'enveloppe d'onset (s) — fin pour ne pas splitter le lag fondamental
 const WINDOW = 4.0; // historique pour l'autocorrélation (s)
 const EST_PERIOD = 0.5; // ré-estimation du tempo (s)
+// Dosage de la tolérance ±1 case (0 = corrélation exacte, 1 = maximum du voisinage).
+// BALAYÉ sur kick 4/4 et sur mix dense, 80→185 BPM : 0 donne 6/9 en clair, 0,5
+// donne 8/9, 0,75 donne 9/9 — et le matériel dense reste à 3/9 quel que soit le
+// dosage, donc la tolérance ne lui coûte rien.
+const TOL = 0.75;
 
 export class BeatTracker {
   constructor(bpm = 120) {
@@ -96,14 +101,22 @@ export class BeatTracker {
     const N = Math.round(WINDOW / BIN);
     const env = new Float32Array(N);
     const t0 = now - WINDOW;
+    // MESURÉ : ranger chaque onset dans UNE case par `floor` détruit
+    // l'autocorrélation quand la période tombe près d'un nombre entier de cases.
+    // À 150 BPM la période vaut exactement 40 cases : les onsets basculent entre
+    // 40 et 41 selon l'arrondi flottant, le peigne se déphase d'une case et
+    // ac[40] tombe à ZÉRO (relevé) — le sous-harmonique 75 BPM gagnait alors.
+    // On répartit donc linéairement sur les deux cases voisines.
     for (const o of this.onsets) {
-      const b = Math.floor((o.t - t0) / BIN);
-      if (b >= 0 && b < N) env[b] += o.s;
+      const x = (o.t - t0) / BIN;
+      const b = Math.floor(x), f = x - b;
+      if (b >= 0 && b < N) env[b] += o.s * (1 - f);
+      if (b + 1 >= 0 && b + 1 < N) env[b + 1] += o.s * f;
     }
     let e = 0; for (let i = 0; i < N; i++) e += env[i];
     if (e < 1e-6) return;
 
-    const Lmin = Math.round(60 / BPM_MAX / BIN); // 180 BPM
+    const Lmin = Math.round(60 / BPM_MAX / BIN); // borne haute (BPM_MAX)
     const Lmax = Math.round(60 / BPM_MIN / BIN); // 70 BPM
     // Étend l'autocorr jusqu'à 3·Lmax pour que le renfort harmonique (2L,3L) soit
     // DISPONIBLE même pour les lags lents. Sinon biais structurel vers les tempos
@@ -112,12 +125,34 @@ export class BeatTracker {
     // son 2L=150 → il gagne à tort (cause du 240→158). Normalisé par le recouvrement
     // (N-L) : sinon les lags longs (moins de termes) sont sous-évalués (autre biais).
     const Lext = Math.min(3 * Lmax, N - 1);
+    // CORRÉLATION TOLÉRANTE (±1 case). MESURÉ, et c'est LA cause des verrous au
+    // demi-tempo : l'instant d'un onset est daté sur la grille d'analyse (saut de
+    // 10,67 ms), donc un kick à 150 BPM ressort à 395 ou 405 ms d'intervalle —
+    // jamais 400. En cases de 5 ms cela fait 79 ou 81, JAMAIS 80 : ac[80] valait
+    // exactement 0 (relevé dans le suiveur) pendant que deux temps (79+81=160)
+    // tombaient pile — le vrai tempo était invisible par construction.
+    // On compare donc chaque case à la MEILLEURE de ses trois voisines décalées.
+    // Élargir l'enveloppe à la place marchait à 150-170 mais fusionnait les
+    // onsets au-delà de 175 (mesuré : 175→159, 200→100) : la tolérance, elle,
+    // garde le pic net et vaut à TOUS les lags.
+    const envMax = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      let m = env[i];
+      if (i > 0 && env[i - 1] > m) m = env[i - 1];
+      if (i + 1 < N && env[i + 1] > m) m = env[i + 1];
+      envMax[i] = m;
+    }
     const ac = new Float32Array(Lext + 1);
     for (let L = Lmin; L <= Lext; L++) {
-      let s = 0; for (let i = L; i < N; i++) s += env[i] * env[i - L];
+      let s = 0; for (let i = L; i < N; i++) { const k = i - L; s += env[i] * (env[k] + TOL * (envMax[k] - env[k])); }
       ac[L] = s / (N - L);
     }
-    const PREF = 125, SIG = 0.55;
+    // Prior de salience recentré et élargi. MESURÉ sur kick 4/4 de 120 à 200 BPM :
+    // à 125/0,55 le suiveur ne tenait que 120-170 (175→123, 185→166, 200→100, tous
+    // des lectures en demi-temps) ; à 145/0,75 il tient 9 tempos sur 9. Le prior
+    // reste quasi identique pour les tempos lents (0,73 contre 0,72 à 80 BPM) :
+    // l'élargissement compense le décalage.
+    const PREF = 145, SIG = 0.75;
     const pref = (bpm) => { const x = Math.log(bpm / PREF); return Math.exp(-(x * x) / (2 * SIG * SIG)); };
     const acAt = (k) => (k <= Lext ? ac[k] : 0);
     const harm = (L) => ac[L] + 0.6 * acAt(2 * L) + 0.35 * acAt(3 * L);
@@ -150,8 +185,14 @@ export class BeatTracker {
     const reliable = this.onsets.length >= 6 && best > meanSc * 2.5;
     if (!reliable) return;
 
+    // Barrière de saut d'octave. Elle était à 1,5 et se comportait en CLIQUET :
+    // une fois verrouillé par erreur sur la demi-mesure (fréquent en trance —
+    // l'acquisition part à 120 et attrape 75 avant d'avoir assez d'onsets), le
+    // vrai tempo ne bat le sous-harmonique que de 1,33× (mesuré à 150 BPM :
+    // score 0,0244 contre 0,0183) et ne repassait donc JAMAIS. À 1,2 la sortie
+    // d'erreur redevient possible sans rouvrir la porte au flottement.
     const r = candBpm / this.bpm;
-    if ((r > 1.5 || r < 0.67) && best < curScore * 1.5) candBpm = this.bpm; // rejette le saut d'octave
+    if ((r > 1.5 || r < 0.67) && best < curScore * 1.2) candBpm = this.bpm;
     this.bpm = clampBpm(this.bpm + TEMPO_LERP * (candBpm - this.bpm)); // F2 clamp à chaque MAJ
   }
 

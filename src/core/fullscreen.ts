@@ -19,12 +19,18 @@ export function makeProgram(gl: WebGL2RenderingContext, frag: string, opts?: { c
   return pi;
 }
 
-let _vao: WebGLVertexArrayObject | null = null;
+// Le VAO vide est mis en cache PAR CONTEXTE. Un cache global casserait dès qu'un
+// second contexte existe (mod Spicetify : Spotify démonte/remonte la page, donc
+// un nouveau contexte à chaque fois) — un objet d'un autre contexte fait échouer
+// bindVertexArray, et TOUS les draws deviennent des INVALID_OPERATION silencieux.
+const _vaos = new WeakMap<WebGL2RenderingContext, WebGLVertexArrayObject>();
+
 export function drawFullscreen(gl: WebGL2RenderingContext, pi: twgl.ProgramInfo, uniforms: Record<string, unknown>): void {
   gl.useProgram(pi.program);
   twgl.setUniforms(pi, uniforms);
-  if (!_vao) _vao = gl.createVertexArray();
-  gl.bindVertexArray(_vao);
+  let vao = _vaos.get(gl);
+  if (!vao) { vao = gl.createVertexArray()!; _vaos.set(gl, vao); }
+  gl.bindVertexArray(vao);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   gl.bindVertexArray(null);
 }

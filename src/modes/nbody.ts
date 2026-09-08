@@ -12,6 +12,7 @@ import { registerParams, unregister } from "../modmatrix/targets";
 import { F } from "../audio/constants";
 import type { Mode, Resources } from "./Mode";
 import type { BusFrame } from "../audio/bus";
+import { decayDt, gainDt } from "../core/loop";
 import type { Viewport } from "../core/loop";
 
 const ORBIT = 256; // 65 536 particules
@@ -93,6 +94,7 @@ void main(){ o = texture(uTex, v_uv); }`;
 
 export class NBodyMode implements Mode {
   id = "nbody"; family = "density" as const;
+  private lastDt = 1 / 60; private lastTime = -1; // décroissance compensée (render() n'a pas dt)
   private gl!: WebGL2RenderingContext; private res!: Resources;
   private orbit!: PingPong; private accum!: PingPong; private w = 0; private h = 0;
   private pSeed: any; private pStep: any; private pPoints: any; private pDecay: any; private pCopy: any;
@@ -174,6 +176,12 @@ export class NBodyMode implements Mode {
   }
 
   update(fr: BusFrame, dt: number, time: number): void {
+    // Le dt fourni est BORNÉ à 1/20 s par RenderLoop (protection des simulations
+    // après un blocage). Pour la décroissance il faut le temps RÉELLEMENT écoulé,
+    // sinon la compensation ne corrige qu'un tiers du problème quand le rAF est
+    // bridé à ~1,3 Hz (fenêtre non focalisée).
+    const reel = this.lastTime < 0 ? dt : Math.min(1, Math.max(1 / 1000, time - this.lastTime));
+    this.lastTime = time; this.lastDt = reel;
     this.time = time;
     const m = this.res.matrix;
     // spawn de masse sur les onsets : injection d'énergie brève et forte
@@ -220,7 +228,7 @@ export class NBodyMode implements Mode {
     gl.disable(gl.BLEND);
     drawFullscreen(gl, this.pDecay, {
       uTex: this.accum.read.tex,
-      uDecay: clamp01(m.get("nbody.params.decay")),
+      uDecay: decayDt(clamp01(m.get("nbody.params.decay")), this.lastDt),
     });
     // 2) points additifs par-dessus (contribution ~0.12)
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
@@ -231,7 +239,7 @@ export class NBodyMode implements Mode {
     gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uScale"), m.get("nbody.params.scale") || 1.15);
     gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uHue"), m.get("global.baseHue"));
     gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uSpeedGain"), m.get("nbody.params.speedGain"));
-    gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uGain"), m.get("nbody.params.gain") || 0.12);
+    gl.uniform1f(gl.getUniformLocation(this.pPoints.program, "uGain"), gainDt(m.get("nbody.params.gain") || 0.12, this.lastDt));
     gl.bindVertexArray(this.emptyVao);
     gl.drawArrays(gl.POINTS, 0, ORBIT * ORBIT);
     gl.bindVertexArray(null);
