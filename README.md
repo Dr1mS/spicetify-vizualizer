@@ -54,8 +54,9 @@ touching Spotify.
 ### Uninstall
 
 ```bash
-spicetify config custom_apps viz-   # removes viz, keeps the others
-spicetify apply
+# `spicetify` is often not on PATH — use the full path if the bare command fails
+~/.spicetify/spicetify config custom_apps viz-   # removes viz, keeps the others
+~/.spicetify/spicetify apply
 ```
 
 ## What it looks like
