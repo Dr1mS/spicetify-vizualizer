@@ -1,0 +1,19 @@
+{
+  "name": "Vizualizer",
+  "description": "Real-time WebGL2 audio visualizer — 24 modes, audio-to-visual mod matrix. Needs a local PipeWire capture bridge (Linux).",
+  "preview": "preview.png",
+  "readme": "README.md",
+  "authors": [
+    {
+      "name": "Dr1mS",
+      "url": "https://github.com/Dr1mS"
+    }
+  ],
+  "tags": [
+    "visualizer",
+    "webgl",
+    "audio",
+    "linux",
+    "pipewire"
+  ]
+}
