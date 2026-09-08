@@ -173,6 +173,42 @@ Autres propriétés :
 Le client se reconnecte seul : tu peux démarrer, arrêter, redémarrer le pont sans
 toucher à Spotify. Sans pont, l'app affiche la commande à lancer.
 
+### La porte de veille, et le service systemd
+
+La capture ne tourne **que quand un client écoute**. C'est ce qui rend acceptable de
+laisser le pont lancé en permanence — sans cette porte, il coûterait en continu ce
+qu'il coûte en usage.
+
+Mesuré ici (trace en trois points sur `/proc/<pid>/stat`, 10 s par point, un client
+WebSocket brut branché puis débranché) :
+
+| état | CPU (un coeur) | enfant `pw-record` |
+|---|---|---|
+| aucun client | **0,3 %** | aucun |
+| visualiseur ouvert, Spotify en pause | 6,3 % | 1 |
+| visualiseur ouvert, musique en lecture | 8,0 % | 1 |
+
+Les 6,3 % en pause sont irréductibles tant que le panneau est ouvert : l'analyseur
+continue de tourner sur du silence pour tenir la connexion vivante, et **sauter la
+FFT sur des blocs nuls n'est pas équivalent** — le worklet porte des décroissances et
+un AGC d'un bloc à l'autre.
+
+Deux pièges du code, tous deux corrigés en même temps que la porte :
+
+- `WsServer` n'avait aucun hook de déconnexion (le `close()` local ne faisait que
+  retirer le client de l'ensemble) — d'où `onClose(restants)` ;
+- le handler `close` de `pw-record` relance la capture après un backoff, avec
+  `stopping` pour seul garde-fou. Un arrêt **voulu** a donc son propre drapeau
+  (`arretVoulu`), sinon éteindre la capture la rallumait aussitôt.
+
+`--eager` rétablit l'ancien comportement (capture en continu), pour le débogage.
+
+Le service : `npm run bridge:service` écrit `~/.config/systemd/user/viz-bridge.service`,
+l'active et le démarre. Le chemin absolu de `node` y est figé — un service n'hérite
+pas du `PATH` du shell, et nvm installe hors du `PATH` système — donc après une mise à
+jour de Node il faut relancer la commande. `--uninstall` retire tout, `--print` montre
+l'unité sans rien écrire.
+
 ## Performance
 
 Coût moteur mesuré **dans Spotify** (panneau 791×608, DPR 1, Intel HD 530 / Mesa,

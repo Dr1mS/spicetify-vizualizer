@@ -57,11 +57,14 @@ function makeParser(onEvent) {
 }
 
 export class WsServer {
-  /** @param {{port?:number, host?:string, onHttp?:(req,res)=>boolean, onClient?:(send:(d:any)=>void)=>void}} opts */
+  /** @param {{port?:number, host?:string, onHttp?:(req,res)=>boolean, onClient?:(send:(d:any)=>void)=>void, onClose?:(remaining:number)=>void}} opts */
   constructor(opts = {}) {
     this.port = opts.port ?? 8787;
     this.host = opts.host ?? "127.0.0.1";
     this.onClient = opts.onClient;
+    // Appelé à CHAQUE déconnexion, avec le nombre de clients restants. C'est ce
+    // qui permet au pont d'éteindre la capture quand plus personne n'écoute.
+    this.onClose = opts.onClose;
     this.clients = new Set();
     this.http = createServer((req, res) => {
       if (opts.onHttp && opts.onHttp(req, res)) return;
@@ -83,7 +86,13 @@ export class WsServer {
     socket.setNoDelay(true);
     const client = { socket, alive: true };
     this.clients.add(client);
-    const close = () => { if (!client.alive) return; client.alive = false; this.clients.delete(client); socket.destroy(); };
+    const close = () => {
+      if (!client.alive) return;
+      client.alive = false;
+      this.clients.delete(client);
+      socket.destroy();
+      this.onClose?.(this.clients.size);
+    };
     socket.on("data", makeParser((ev, payload) => {
       if (ev === "close") { socket.write(encodeFrame(0x8, Buffer.alloc(0))); close(); }
       else if (ev === "ping") socket.write(encodeFrame(0xa, payload));

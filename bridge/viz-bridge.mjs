@@ -18,8 +18,13 @@
 //   sink          — le monitor du sink : tout le son système.
 //   mic           — la source d'entrée par défaut (micro).
 //
+// La capture ne tourne QUE quand un client écoute (voir « porte de veille » plus
+// bas) : le pont peut donc rester lancé en permanence — service systemd — sans
+// rien coûter tant que le visualiseur n'est pas ouvert.
+//
 // Usage :  node bridge/viz-bridge.mjs [--source app|sink|mic] [--app spotify]
-//                                     [--target <noeud>] [--port 8787] [--list] [-v]
+//                                     [--target <noeud>] [--port 8787] [--list]
+//                                     [--eager] [-v]
 
 import { spawn } from "node:child_process";
 import { WsServer } from "./ws-server.mjs";
@@ -42,6 +47,7 @@ const VERBOSE = has("-v") || has("--verbose");
 const APP = arg("--app", "spotify");
 const SOURCE = arg("--source", "app"); // app | sink | mic
 const TARGET = arg("--target", null);
+const EAGER = has("--eager"); // capture en continu, même sans client (débogage)
 
 // --- parseur PCM en flux -----------------------------------------------------
 // pw-record écrit un en-tête WAV vers un FICHIER, mais du PCM BRUT vers stdout
@@ -113,6 +119,11 @@ const srv = new WsServer({
   onClient: (send) => {
     send(JSON.stringify({ type: "hello", protocol: 1, sampleRate: RATE, featLen: FEAT_LEN, melCount: MEL_COUNT, source: SOURCE_LABEL }));
     console.log(`[bridge] client connecté (${srv.clients.size})`);
+    demarrer();
+  },
+  onClose: (restants) => {
+    console.log(`[bridge] client parti (${restants})`);
+    if (!restants) arreter();
   },
 });
 
@@ -129,6 +140,10 @@ const worklet = loadWorklet({
 
 // --- capture ----------------------------------------------------------------
 let child = null, retry = 0, stopping = false, linked = 0;
+// `stopping` = le processus s'éteint ; `arretVoulu` = on a coupé la capture
+// exprès (plus aucun client). Sans les distinguer, le handler `close` de
+// pw-record relancerait la capture qu'on vient d'éteindre, après son backoff.
+let actif = false, arretVoulu = false, relinkT = null;
 let lastPcm = 0, lastFill = Date.now();
 const mono = new Float32Array(16384);
 const zeros = new Float32Array(RATE); // 1 s de silence
@@ -169,17 +184,42 @@ function capture() {
   child.on("error", (e) => console.error("[bridge] pw-record introuvable ?", e.message));
   child.on("close", (code) => {
     child = null;
-    if (stopping) return;
+    if (stopping || arretVoulu) return;
     const delay = Math.min(5000, 250 * 2 ** retry++);
     console.error(`[bridge] pw-record s'est arrêté (code ${code}) — relance dans ${delay} ms`);
     setTimeout(capture, delay);
   });
 }
 
+// --- porte de veille --------------------------------------------------------
+// MESURÉ : capture + FFT + mel + onsets à ~94 Hz coûtent 6,3 % d'un coeur en
+// continu — y compris sur du silence, Spotify en pause. Un pont lancé au
+// démarrage de la session paierait ça 24 h/24 pour rien. On n'allume donc la
+// chaîne qu'à partir du premier client, et on l'éteint au dernier départ ; le
+// serveur WebSocket, lui, reste à l'écoute (c'est lui le point de rendez-vous).
+function demarrer() {
+  if (actif || stopping) return;
+  actif = true; arretVoulu = false; retry = 0;
+  // Sans ce recalage, fillSilence() injecterait d'un coup tout le silence
+  // « accumulé » depuis le dernier arrêt.
+  lastPcm = lastFill = Date.now();
+  capture();
+  if (SOURCE === "app") relinkT = setTimeout(relink, 400);
+  console.log("[bridge] capture allumée");
+}
+
+function arreter() {
+  if (!actif || EAGER) return;
+  actif = false; arretVoulu = true; linked = 0;
+  clearTimeout(relinkT);
+  child?.kill();
+  console.log("[bridge] capture éteinte — le pont reste à l'écoute sur le port");
+}
+
 // Câblage : nos ports d'entrée <- ports de sortie de l'application. À refaire
 // périodiquement, l'app détruisant/recréant son flux (pause, pub, redémarrage).
 async function relink() {
-  if (stopping || SOURCE !== "app" || !child) return;
+  if (stopping || !actif || SOURCE !== "app" || !child) return;
   const dump = await pwDump();
   const nodes = readNodes(dump);
   const self = dump.filter((o) => String(o.type || "").endsWith("Node") && ((o.info && o.info.props) || {})["node.name"] === NODE_NAME).map((o) => o.id);
@@ -210,6 +250,7 @@ async function relink() {
 // et le client basculerait à tort en "pont hors ligne". On lui donne du zéro au
 // rythme réel — les features retombent doucement à zéro, la connexion tient.
 function fillSilence() {
+  if (!actif) return;
   const now = Date.now();
   if (now - lastPcm < 2 * SILENCE_MS) return;
   const n = Math.min(zeros.length, Math.round(((now - lastFill) * RATE) / 1000));
@@ -224,19 +265,21 @@ srv.http.on("error", (e) => {
   process.exit(1);
 });
 await srv.listen();
-capture();
-if (SOURCE === "app") { setTimeout(relink, 400); setInterval(relink, RELINK_MS).unref?.(); }
+if (SOURCE === "app") setInterval(relink, RELINK_MS).unref?.();
 const fill = setInterval(fillSilence, SILENCE_MS);
 fill.unref?.();
+if (EAGER) demarrer();
 
 console.log(`[bridge] source : ${SOURCE_LABEL}${SOURCE === "app" ? " (ni micro, ni autres applis)" : ""}`);
 console.log(`[bridge] WebSocket : ws://127.0.0.1:${PORT}  (features ${FEAT_LEN}f32 @ ~${(RATE / 512).toFixed(0)} Hz)`);
+console.log(EAGER ? "[bridge] --eager : capture en continu" : "[bridge] en veille — la capture démarre au premier client");
 
 // Battement de coeur : rend visible un flux muet (le mode d'échec classique).
 let prevFrames = 0;
 setInterval(() => {
   const d = frames - prevFrames; prevFrames = frames;
   const live = Date.now() - lastPcm < 500;
+  if (!actif) { if (VERBOSE) console.log("[bridge] veille · 0 client"); return; }
   const line = `[bridge] ${d} trames/s · ${live ? `rms ${lastRms.toFixed(3)}` : "silence (app en pause ?)"} · ${srv.clients.size} client(s)`;
   if (VERBOSE) console.log(line);
   else if (d === 0) console.error("[bridge] ⚠ aucune trame — la capture est morte ?");

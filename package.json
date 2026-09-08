@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "bridge": "node bridge/viz-bridge.mjs",
+    "bridge:service": "node bridge/install-service.mjs",
     "build:spicetify": "vite build --config vite.spicetify.config.ts",
     "install:spicetify": "npm run build:spicetify && node spicetify/install.mjs",
     "test": "for f in test/*.test.mjs; do node \"$f\" || exit 1; done"

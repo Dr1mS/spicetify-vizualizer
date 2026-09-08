@@ -27,7 +27,7 @@ over `ws://127.0.0.1:8787`.
 | | |
 |---|---|
 | **Platform** | **Linux with PipeWire only.** macOS and Windows would need a different capture path (BlackHole / WASAPI loopback) — not implemented. |
-| **Extra process** | You must run `npm run bridge` alongside Spotify. Without it the app shows an "audio bridge offline" card and nothing else. |
+| **Extra process** | A bridge process must be running alongside Spotify. Install it once as a systemd user service (below) and you never have to think about it again; without it the app shows an "audio bridge offline" card and nothing else. |
 | **Node.js** | Required, both to build the app and to run the bridge. |
 
 Nothing is captured except Spotify: not your microphone, not your other applications.
@@ -50,6 +50,44 @@ which restarts Spotify. A **Vizualizer** entry then appears in the sidebar.
 
 The client reconnects on its own — you can start, stop and restart the bridge without
 touching Spotify.
+
+### Start the bridge automatically (recommended)
+
+Running `npm run bridge` by hand every time gets old. Install it once as a **systemd
+user service** and it comes back with every session:
+
+```bash
+npm run bridge:service                          # install, enable and start
+npm run bridge:service -- --source sink         # …with bridge options
+node bridge/install-service.mjs --uninstall     # remove it
+node bridge/install-service.mjs --print         # show the unit without writing anything
+
+systemctl --user status viz-bridge              # state
+journalctl --user -u viz-bridge -f              # log
+```
+
+**This is free when you are not using it.** The bridge sleeps until something
+connects: no `pw-record` child, no FFT. Measured on an Intel HD 530 laptop:
+
+| state | CPU (one core) | `pw-record` child |
+|---|---|---|
+| idle, visualizer closed | **0.3 %** | none |
+| visualizer open, Spotify paused | 6.3 % | 1 |
+| visualizer open, music playing | 8.0 % | 1 |
+
+Capture starts on the first client and stops on the last one, so closing the
+visualizer panel really does give the CPU back. Note the middle row: with the panel
+open and the music paused it still costs ~6 %, because the analyser keeps running on
+silence to hold the connection live — skipping the FFT there is not equivalent, the
+worklet carries decay and AGC state across blocks. If you want that back, close the
+panel.
+
+> The unit hard-codes the absolute path to `node` (a service does not inherit your
+> shell `PATH`, and nvm installs outside the system one). After a Node upgrade, re-run
+> `npm run bridge:service` to refresh it.
+>
+> Running `npm run bridge` by hand while the service is up will fail with
+> `port 8787 déjà pris` — that is the service already doing its job.
 
 ### Uninstall
 
